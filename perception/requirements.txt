@@ -1,0 +1,6 @@
+opencv-python
+numpy
+torch
+torchsummary
+pillow==8.2.0
+torchvision
