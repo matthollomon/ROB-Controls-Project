@@ -12,18 +12,20 @@ TestTrack = load('TestTrack.mat')
 bl = TestTrack.TestTrack.bl;
 br = TestTrack.TestTrack.br;
 cline = TestTrack.TestTrack.cline;
-thetaCline = TestTrack.TestTrack.theta;
+theta = TestTrack.TestTrack.theta;
 
 %% Define Vehicle Parameters
 %Deal with Ftotal > Fmax condition
 
 %number of states and inputs in dynamic model
-nstates = 4;
+nstates = 6;
 ninputs = 2;
 
 deltaCons = [-0.5 , 0.5];
 FxCons = [-5000 , 5000];
+
 input_range = [FxCons ; deltaCons];
+
 mass = 1400;
 Nw = 2;
 f = 0.01;
@@ -31,225 +33,298 @@ Iz = 2667;
 a = 1.35;
 b = 1.45;
 By = 0.27;
-Cy = 1.2;
+Cy = 1.2; % CHECK
 Dy = 0.7;
-Ey = 0.7;
+Ey = -1.6;
 Shy = 0;
 Svy = 0;
 g = 9.806;
-Fmax = 0.7 * m * g;
+Fmax = 0.7 * mass * g;
 
-%% Time Discretization
-%Tfinal should be defined as a function speed, higher Tfinal for higher speed
+%% Define upper, lower boundaries Attempt 1
+%redefine steps as function of total time
 
-%Sample constant time discretization
-dt=0.01;
-Tfinal = 2;
-%time span
-T = 0 : dt : Tfinal;
+dt = 0.01;
+inputSteps=246;
+tTotal = 60 * 10; %seconds
+nsteps = round(tTotal / dt);
+stepSize = 1/nsteps;
+stepTime = round(tTotal / inputSteps);
 
-%% load reference trajectory
-%What does first entry correspond to?
-%How to define U, first column should be theta
-%Y ref should correspond to centerline trajectory at initial index to final index for the time horizon
+d = 5;
 
-U_ref = interp1(0:0.01:Tfinal,[U,U(:,end)]',T)'; 
-Y_ref = interp1(0:0.01:Tfinal,Y,T)'
+ubX = cline(1,:) - d * cos(pi / 2 - theta);
+ubX = spline(1:length(ubX),ubX,linspace(1,246,nsteps));
+ubY = cline(2,:) + d * sin(pi / 2 - theta);
+ubY = spline(1:length(ubY),ubY,linspace(1,246,nsteps));
 
-%% Discrete-time A and B matrices
-%these are the system linearized in discrete time about the reference
-%trajectory i.e. x(i+1)=A_i*x_i+B_i*u_i
+lbX = cline(1,:) + d * cos(pi / 2 - theta);
+lbX = spline(1:length(lbX),lbX,linspace(1,246,nsteps));
+lbY = cline(2,:) - d * sin(pi / 2 - theta);
+lbY = spline(1:length(lbY),lbY,linspace(1,246,nsteps));
 
-%Change to A, B from dynamics
-A=@(i) eye(3)+dt*[0 0 -U_ref(1,i)*sin(Y_ref(3,i))-(U_ref(1,i)*b/L)*cos(Y_ref(3,i))*tan(U_ref(2,i));...
-                     0 0  U_ref(1,i)*cos(Y_ref(3,i))-(U_ref(1,i)*b/L)*sin(Y_ref(3,i))*tan(U_ref(2,i));...
-                      0 0                       0                    ];
-B=@(i) dt*[cos(Y_ref(3,i))-b/L*sin(Y_ref(3,i))*tan(U_ref(2,i)), -(U_ref(1,i)*b*sin(Y_ref(3,i)))/(L*cos(U_ref(2,i))^2);...
-           sin(Y_ref(3,i))+b/L*cos(Y_ref(3,i))*tan(U_ref(2,i)), (U_ref(1,i)*b*cos(Y_ref(3,i)))/(L*cos(U_ref(2,i))^2);...
-           1/L*tan(U_ref(2,i)),   
+options = optimoptions('fmincon','SpecifyConstraintGradient',true,...
+                       'SpecifyObjectiveGradient',true) ;
+                   
+ub = zeros(8*nsteps-2,1);
 
-%% Number of decision variables for colocation method
-%11 timesteps for 3 states, 10 timesteps for 2 inputs
+ub(1:6:6*nsteps) = ubX ;
+ub(2:6:6*nsteps) = Inf ;
+ub(3:6:6*nsteps) = ubY ;
+ub(4:6:6*nsteps) = Inf ;
+ub(5:6:6*nsteps) = pi;
+ub(6:6:6*nsteps) = Inf ;
+ub(6*nsteps+1:2:8*nsteps-2) = 0.5 ;
+ub(6*nsteps+2:2:8*nsteps-2) = 5000 ;
 
-npred=10;
-Ndec=(npred+1)*nstates+ninputs*npred;
-%decision variable will be z=[x_1...x_11;u_1...u_10] (x refers to state
-%vector, u refers to input vector)
+lb = zeros(8*nsteps-2,1);
 
-%% Test function at index 1 to construct Aeq Beq (equality constraints
-%enforce x(i+1)=A_i*x_i+B_i*u_i
-eY0=[0 ; 0 ; 0];
-[Aeq_test1,beq_test1]=eq_cons(1,A,B,eY0,npred,nstates,ninputs);
+lb(1:6:6*nsteps) =  lbX;
+lb(2:6:6*nsteps) = -Inf ;
+lb(3:6:6*nsteps) = lbY ;
+lb(4:6:6*nsteps) = -Inf ;
+lb(5:6:6*nsteps) = -pi ;
+lb(6:6:6*nsteps) = -Inf ;
+lb(6*nsteps+1:2:8*nsteps-2) = -0.5 ;
+lb(6*nsteps+2:2:8*nsteps-2) = -5000 ;
 
-%% Test function at index 1 to generate limits on inputs
-[Lb_test1,Ub_test1]=bound_cons(1,U_ref,npred,input_range,nstates,ninputs);
+%% Bounds, Attempt 2
 
+%Interpolation
 
-%% 4.5 simulate controller working
+interp_size = 10;
+bl = [interp(bl(1,:),interp_size);interp(bl(2,:),interp_size)];
+br = [interp(br(1,:),interp_size);interp(br(2,:),interp_size)];
+theta = interp(theta,interp_size);
+nsteps = size(bl,2);
 
-%final trajectory
-Y=NaN(3,length(T));
+lowbounds = min(bl,br);
+highbounds = max(bl,br);
 
-%applied inputs
-U=NaN(2,length(T));
+[lb,ub]=bound_cons(nsteps,theta ,lowbounds, highbounds);
 
-%input from QP
-u_mpc=NaN(2,length(T));
+%% Run optimization
+x0 = [287,5,-176,0,2,0];
+X0 = [repmat(x0 , 1 , nsteps) , repmat([0,0] , 1 , nsteps-1)];
 
-%error in states (actual-reference)
-eY=NaN(3,length(T));
+cf=@costfun;
+nc=@nonlcon;
 
-%set random initial condition
+z = fmincon(cf,X0,[],[],[],[],lb',ub',nc,options);
 
-Y(:,1)=eY0+Y_ref(:,1);
+%% Generate U
 
-for i=1:length(T)-1
-    %shorten prediction horizon if we are at the end of trajectory
-    npred_i=min([npred,length(T)-i]);
+U = reshape(z(6*nsteps+1:end),2,nsteps-1);
+%U=@(t) [interp1(0:dt:(nsteps - 2)*dt,U(1,:),t,'previous','extrap');...
+       % interp1(0:dt:(nsteps - 2)*dt,U(2,:),t,'previous','extrap')];
+
+%% Test Plot
+
+[Y,T] = forwardIntegrateControlInput(U);
+
+figure(1)
+plot(bl(1,:),bl(2,:),'k')
+hold on
+plot(br(1,:),br(2,:),'k')
+plot(Y(:,1),Y(:,3),'r')
+hold off
+
+%% Functions (taken from GitHub)
+
+function [lb,ub]=bound_cons(nsteps,theta ,lowbounds, highbounds) %,input_range
+
+ub = [];
+lb = [];
+
+for i = 1:nsteps
     
-    %calculate error
-    eY(:,i)=Y(:,i)-Y_ref(:,i);
+ub = [ub,[highbounds(1,i), +inf,highbounds(2,i), +inf, theta(i)+pi/2, +inf]];
 
-    %generate equality constraints
-    [Aeq,beq]=eq_cons(i,A,B,eY(:,i),npred_i,nstates,ninputs);
-    
-    %generate boundary constraints
-    [Lb,Ub]=bound_cons(i,U_ref,npred_i,input_range,nstates,ninputs);
-    
-    %cost for states
-    Q=[1,1,0.5];
-    
-    %cost for inputs
-    R=[0.1,0.01];
-    
-    H=diag([repmat(Q,[1,npred_i+1]),repmat(R,[1,npred_i])]);
-    
-    f=zeros(nstates*(npred_i+1)+ninputs*npred_i,1);
-    
-    [x,fval] = quadprog(H,f,[],[],Aeq,beq,Lb,Ub);
-    
-    %get linearized input
-    u_mpc(:,i)=x(nstates*(npred_i+1)+1:nstates*(npred_i+1)+ninputs);
-    
-    %get input
-    U(:,i)=u_mpc(:,i)+U_ref(:,i);
-    
-    
-    %simulate model
-    [~,ztemp]=ode45(@(t,z)kinematic_bike_dynamics(t,z,U(:,i),0,b,L),[0 dt],Y(:,i));
-    
-    %store final state
-    Y(:,i+1)=ztemp(end,:)';
-end
-
-
-%% Functions 
-
-function [Aeq,beq] = eq_cons(initial_idx,A,B,x_initial,npred,nstates,ninputs)
-%build matrix for A_i*x_i+B_i*u_i-x_{i+1}=0
-%in the form Aeq*z=beq
-%initial_idx specifies the time index of initial condition from the reference trajectory 
-%A and B are function handles above
-
-%initial condition
-x_initial=x_initial(:);
-
-%size of decision variable and size of part holding states
-zsize=(npred+1)*nstates+npred*ninputs;
-xsize=(npred+1)*nstates;
-
-Aeq=zeros(xsize,zsize);
-Aeq(1:nstates,1:nstates)=eye(nstates); %initial condition 
-beq=zeros(xsize,1);
-beq(1:nstates)=x_initial;
-
-state_idxs=nstates+1:nstates:xsize;
-input_idxs=xsize+1:ninputs:zsize;
-
-for i=1:npred
-    %negative identity for i+1
-    Aeq(state_idxs(i):state_idxs(i)+nstates-1,state_idxs(i):state_idxs(i)+nstates-1)=-eye(nstates);
-    
-    %A matrix for i
-    Aeq(state_idxs(i):state_idxs(i)+nstates-1,state_idxs(i)-nstates:state_idxs(i)-1)=A(initial_idx+i-1);
-    
-    %B matrix for i
-    Aeq(state_idxs(i):state_idxs(i)+nstates-1,input_idxs(i):input_idxs(i)+ninputs-1)=B(initial_idx+i-1);
-end
+lb = [lb,[lowbounds(1,i), -inf, lowbounds(2,i), -inf, theta(i)-pi/2, -inf]];
 
 end
 
-function [Lb,Ub] = bound_cons(initial_idx,U_ref,npred,input_range,nstates,ninputs)
-%time_idx is the index along uref the initial condition is at
-xsize=(npred+1)*nstates;
-usize=npred*ninputs;
-
-Lb=[];
-Ub=[];
-for j=1:ninputs
-Lb=[Lb;input_range(j,1)-U_ref(j,initial_idx:initial_idx+npred-1)];
-Ub=[Ub;input_range(j,2)-U_ref(j,initial_idx:initial_idx+npred-1)];
-end
-
-Lb=reshape(Lb,[usize,1]);
-Ub=reshape(Ub,[usize,1]);
-
-Lb=[-Inf(xsize,1);Lb];
-Ub=[Inf(xsize,1);Ub];
+ub = [ub,repmat([5000,0.5],1,nsteps-1) ]';
+lb = [lb,repmat([-5000,-0.5],1,nsteps-1) ]';
 
 end
 
-function dzdt=kinematic_bike_dynamics(t,x,T,U)
-%constants
-Nw=2;
-f=0.01;
-Iz=2667;
-a=1.35;
-b=1.45;
-By=0.27;
-Cy=1.2;
-Dy=0.7;
-Ey=-1.6;
-Shy=0;
-Svy=0;
-m=1400;
-g=9.806;
+function [dx] = odefun(Y,Uin)
+
+m    = 1400;                % Mass of Car
+Nw  = 2.00;                % ?? 
+f    = 0.01;                % ??
+Iz  = 2667;                 % Momemnt of Inertia
+a    = 1.35;                % Front Axle to COM
+b    = 1.45;                % Rear Axle to Com
+By  = 0.27;                 % Empirically Fit Coefficient
+Cy  = 1.2;                  % Empirically Fit Coefficient
+Dy  = 0.70;                 % Empirically Fit Coefficient
+Ey  = -1.6;                 % Empirically Fit Coefficient
+g    = 9.806;               % Graviational Constant
+
+alpha_f = (Uin(2) - atan((Y(4)+a*Y(6))/Y(2)));
+alpha_r = (- atan((Y(4)-b*Y(6))/Y(2)));
+
+psi_yf = ((1-(Ey))*alpha_f + (Ey)/By*atan(By*alpha_f));  % S_hy = 0
+psi_yr = ((1-(Ey))*alpha_r + (Ey)/By*atan(By*alpha_r));  % S_hy = 0
 
 
-%generate input functions
-delta_f=interp1(T,U(:,1),t,'previous','extrap');
-F_x=interp1(T,U(:,2),t,'previous','extrap');
+F_yf = (b/(a+b)*m*g*Dy*sin(Cy*atan(By*psi_yf))); %S_vy = 0;
+F_yr = (a/(a+b)*m*g*Dy*sin(Cy*atan(By*psi_yr))); %S_vy = 0;
 
-%slip angle functions in degrees
-a_f=rad2deg(delta_f-atan2(x(4)+a*x(6),x(2)));
-a_r=rad2deg(-atan2((x(4)-b*x(6)),x(2)));
+dx = [Y(2)*cos(Y(5))-Y(4)*sin(Y(5));
+      1/m*(-f*m*g+Nw*Uin(1)-F_yf*sin(Uin(2)))+Y(4)*Y(6);
+      Y(2)*sin(Y(5))+Y(4)*cos(Y(5));
+      1/m*(F_yf*cos(Uin(2))+F_yr)-Y(2)*Y(6);
+      Y(6);
+      1/Iz*(a*F_yf*cos(Uin(2))-b*F_yr)];
+                  
+end
 
-%Nonlinear Tire Dynamics
-phi_yf=(1-Ey)*(a_f+Shy)+(Ey/By)*atan(By*(a_f+Shy));
-phi_yr=(1-Ey)*(a_r+Shy)+(Ey/By)*atan(By*(a_r+Shy));
+function [J, dJ] = costfun(z)
+    if size(z,2) > size(z,1)
+        z = z' ;
+    end
+    nsteps = (size(z,1)+2)/8 ;
 
-F_zf=b/(a+b)*m*g;
-F_yf=F_zf*Dy*sin(Cy*atan(By*phi_yf))+Svy;
+    zx = z(1:6*nsteps) ;
+    zu = z(6*nsteps+1:end) ;
+    R=eye(2*nsteps-2);
 
-F_zr=a/(a+b)*m*g;
-F_yr=F_zr*Dy*sin(Cy*atan(By*phi_yr))+Svy;
+    nom=zeros(6*nsteps,1) ;
+    nom(1:6:6*nsteps) = 1472 ;
+    nom(3:6:6*nsteps+2) = 818 ;
+    Q = diag(repmat([1,0,1,0,1,0],1,nsteps));
 
-F_total=sqrt((Nw*F_x)^2+(F_yr^2));
-F_max=0.7*m*g;
+    J = zu'*R*zu+(zx-nom)'*Q*(zx-nom) ;
+    dJ = [2*Q*zx-2*Q*nom;
+          2*R*zu]' ;
+end
 
-if F_total>F_max
+function [g,h,dg,dh] = nonlcon(z)
+x0   =   287;
+u0   =   5.0;
+y0   =  -176;
+v0   =   0.0;
+psi0 =   2.0;
+r0   =   0.0;
+
+z0 = [x0, u0, y0, v0, psi0, r0];
+
+    if size(z,2) > size(z,1)
+        z = z' ;
+    end
     
-    F_x=F_max/F_total*F_x;
-  
-    F_yr=F_max/F_total*F_yr;
+    nsteps = (size(z,1)+2)/8 ;
+    dt = 0.01 ;
+
+    zx = z(1:nsteps*6) ;
+    zu = z(nsteps*6+1:end) ;
+    
+    g = [];
+    dg = [];
+    
+    h = zeros(6*nsteps,1) ;
+    dh = zeros(6*nsteps,8*nsteps-2);
+    
+    for i = 1:nsteps
+        
+        if i == 1
+            h(1:6) = z(1:6,:) - z0' ;
+            dh(1:6,1:6) = eye(6) ; 
+        else
+            h(6*i-5:6*i) = zx(6*i-5:6*i)-zx(6*i-11:6*i-6)-...
+                               dt*odefun(zx(6*i-11:6*i-6),zu(2*i-3:2*i-2)) ;
+                           
+            dh(6*i-5:6*i,6*i-11:6*i) = [-eye(6)-dt*statepart_hand(zx(6*i-11:6*i-6),zu(2*i-3:2*i-2)),eye(6)] ;
+            dh(6*i-5:6*i,6*nsteps+2*i-3:6*nsteps+2*i-2) = -dt*inputpart_hand(zx(6*i-11:6*i-6),zu(2*i-3:2*i-2)) ;
+        end
+        
+    end
+
+    dg = dg' ;
+    dh= dh' ;
 end
 
-%vehicle dynamics
-dzdt= [x(2)*cos(x(5))-x(4)*sin(x(5));...
-          (-f*m*g+Nw*F_x-F_yf*sin(delta_f))/m+x(4)*x(6);...
-          x(2)*sin(x(5))+x(4)*cos(x(5));...
-          (F_yf*cos(delta_f)+F_yr)/m-x(2)*x(6);...
-          x(6);...
-          (F_yf*a*cos(delta_f)-F_yr*b)/Iz];
+function [pd] = statepart_hand(Y_vec,U_in)
+
+%Initialize Variables.
+m = 1400; 
+N_w = 2.00;
+f = 0.01;
+I_z = 2667;
+a = 1.35;
+b = 1.45;
+B_y = 0.27;
+C_y = 1.2;
+D_y = 0.70;
+E_y = -1.6;
+g = 9.806;
+
+%Set Variables in Interest.
+X = Y_vec(1); u = Y_vec(2); Y = Y_vec(3); v = Y_vec(4); psi = Y_vec(5); r = Y_vec(6);
+Fx = U_in(1); delta_f = U_in(2);
+
+%Partial Derivatives of alpha_f and alpha_r.
+temp1 = -1/(1 + ((v+a*r)/u)^2); temp2 = -1/(1 + ((v-b*r)/u)^2);
+dalpha_f = [0, temp1*-(v+a*r)/u^2, 0, temp1/u, 0, temp1*a/u];
+dalpha_r = [0, temp2*-(v-b*r)/u^2, 0, temp2/u, 0, temp2*-b/u];
+
+%Partial Derivatives of phi_yf and phi_yr.
+alpha_f = delta_f - atan((v+a*r)/u); alpha_r = - atan((v-b*r)/u);
+temp3 = E_y/(1 + (B_y*alpha_f)^2); temp4 = E_y/(1 + (B_y*alpha_r)^2);
+dphi_yf = [0, (1 - E_y + temp3)*dalpha_f(2), 0, (1 - E_y + temp3)*dalpha_f(4) ...
+    0, (1 - E_y + temp3)*dalpha_f(6)];
+dphi_yr = [0, (1 - E_y + temp4)*dalpha_r(2), 0, (1 - E_y + temp4)*dalpha_r(4) ...
+    0, (1 - E_y + temp4)*dalpha_r(6)];
+
+%Partial Derivatives of F_yf and F_yr.
+phi_yf = (1 - E_y)*alpha_f + E_y*atan(B_y*alpha_f)/B_y;
+phi_yr = (1 - E_y)*alpha_r + E_y*atan(B_y*alpha_r)/B_y;
+F_zf = b*m*g/(a+b); F_yf = F_zf*D_y*sin(C_y*atan(B_y*phi_yf));
+F_zr = a*m*g/(a+b); F_yr = F_zr*D_y*sin(C_y*atan(B_y*phi_yr));
+temp5 = F_zf*D_y*cos(C_y*atan(B_y*phi_yf))*C_y*(1/(1+(B_y*phi_yf)^2))*B_y;
+temp6 = F_zr*D_y*cos(C_y*atan(B_y*phi_yr))*C_y*(1/(1+(B_y*phi_yr)^2))*B_y;
+dF_yf = [0, temp5*dphi_yf(2), 0, temp5*dphi_yf(4), 0, temp5*dphi_yf(6)];
+dF_yr = [0, temp6*dphi_yr(2), 0, temp6*dphi_yr(4), 0, temp6*dphi_yr(6)];
+
+%Partial Derivatives for Jacobian Matrix.
+pd = zeros(6);
+temp7 = a*cos(delta_f)/I_z;
+pd(1,:) = [0, cos(psi), 0, -sin(psi), -u*sin(psi)-v*cos(psi), 0];
+pd(2,:) = [0, -sin(delta_f)/m*dF_yf(2), 0, -sin(delta_f)/m*dF_yf(4)+r, ...
+    0, -sin(delta_f)/m*dF_yf(6)+v];
+pd(3,:) = [0, sin(psi), 0, cos(psi), u*cos(psi)-v*sin(psi), 0];
+pd(4,:) = [0, (cos(delta_f)*dF_yf(2)+dF_yr(2))/m - r, 0, ...
+    (cos(delta_f)*dF_yf(4)+dF_yr(4))/m, 0, (cos(delta_f)*dF_yf(6)+dF_yr(6))/m - u];
+pd(5,:) = [0, 0, 0, 0, 0, 1];
+pd(6,:) = [0, temp7*dF_yf(2) - b*dF_yr(2)/I_z, 0, temp7*dF_yf(4) - b*dF_yr(4)/I_z, ...
+    0, temp7*dF_yf(6) - b*dF_yr(6)/I_z];
 end
 
+function [ip] = inputpart_hand(Y_vec,U_in)
+    
+%Initialize Variables.
+m = 1400; N_w = 2.00; f = 0.01; I_z = 2667; a = 1.35; b = 1.45; B_y = 0.27;
+C_y = 1.2; D_y = 0.70; E_y = -1.6; g = 9.806;
+
+%Set Variables in Interest.
+X = Y_vec(1); u = Y_vec(2); Y = Y_vec(3); v = Y_vec(4); psi = Y_vec(5); r = Y_vec(6);
+Fx = U_in(1); delta_f = U_in(2);
+
+%Partial Derivatives of phi_yf.
+alpha_f = delta_f - atan((v+a*r)/u); alpha_r = - atan((v-b*r)/u);
+dphi_yf = [0, 1 - E_y + E_y/(1+(B_y*alpha_f)^2)];
+
+%Partial Derivatives of F_yf.
+phi_yf = (1 - E_y)*alpha_f + E_y*atan(B_y*alpha_f)/B_y;
+F_zf = b*m*g/(a+b); F_yf = F_zf*D_y*sin(C_y*atan(B_y*phi_yf));
+dF_yf = [0, F_zf*D_y*cos(C_y*atan(B_y*phi_yf))*C_y*(1/(1+(B_y*phi_yf)^2))*B_y*dphi_yf(2)];
+
+%Partial Derivatives for Jacobian Matrix.
+ip = zeros(6,2);
+ip(2,:) = [N_w/m, -sin(delta_f)*dF_yf(2)/m - cos(delta_f)*F_yf/m];
+ip(4,:) = [0, a*cos(delta_f)*dF_yf(2)/I_z - a*F_yf*sin(delta_f)/I_z];
+ip(6,:) = [0, cos(delta_f)*dF_yf(2)/m - F_yf*sin(delta_f)/m];
+end
