@@ -1,4 +1,6 @@
 %% Team 19 Controls Part 1
+clear all
+clc
 
 %% Load Data
 
@@ -11,8 +13,7 @@ theta = TestTrack.theta; % Center Line's Orientation
 
 dt = 0.01;
 
-%U = vector of constant steering angle, acceleration for given time
-
+%Manually determined U matrix
 U = [repmat([-0.04, 2400],100,1);
     repmat([0, 2400],200,1);
     repmat([0.0, 2400],30,1);
@@ -153,18 +154,17 @@ x0 = [287 , 5 , -176 , 0 , 2 , 0];
 
 [Y,T] = forwardIntegrateControlInput(U,x0);
 
-
 Y;
 U_in = U;
 trajec = Y';
-theta_traject = trajec(5,:);
+theta_trajec = trajec(5,:);
 trajec = trajec([1,3],:);
 
-figure(1)
-plot(bl(1,:),bl(2,:),'k')
-hold on
-plot(br(1,:),br(2,:),'k')
-plot(trajec(1,:),trajec(2,:),'b--')
+% figure(1)
+% plot(bl(1,:),bl(2,:),'k')
+% hold on
+% plot(br(1,:),br(2,:),'k')
+% plot(trajec(1,:),trajec(2,:),'b--')
 
 %% Initialize Constants
 
@@ -175,32 +175,51 @@ I_z  = 2667;                % Momemnt of Inertia
 a    = 1.35;                % Front Axle to COM
 b    = 1.45;                % Rear Axle to Com
 B_y  = 0.27;                % Empirically Fit Coefficient
-C_y  = 1.2;                % Empirically Fit Coefficient
+C_y  = 1.2;                 % Empirically Fit Coefficient
 D_y  = 0.70;                % Empirically Fit Coefficient
 E_y  = -1.6;                % Empirically Fit Coefficient
 S_hy = 0.00;                % Horizontal Offset in y
 S_vy = 0.00;                % Vertical Offset in y
 g    = 9.806;               % Graviational Constant
 
+upperInputCons = [0.5 , 5000];
+lowerInputCons = [-0.5 , -5000];
+
 %% Initialize Time and Prediction Data
 
-dt   = 0.01;                % Time Step
+dt   = 0.01;% Time Step
 
-interp_size = 10;
+interp_size = 1; 
+
+%try using spline to have evenly spaced points and the ideal total size
 
 bl = [interp(bl(1,:),interp_size);interp(bl(2,:),interp_size)];
 br = [interp(br(1,:),interp_size);interp(br(2,:),interp_size)];
 cline = [interp(cline(1,:),interp_size);interp(cline(2,:),interp_size)];
-trajec = [interp(trajec(1,:),interp_size);interp(trajec(2,:),interp_size)];
-theta_traject = interp(theta_traject,interp_size);
 theta = interp(theta,interp_size);
-cline = [interp(cline(1,:),interp_size);interp(cline(2,:),interp_size)];
 
-figure(2)
-plot(bl(1,:),bl(2,:),'k')
-hold on
-plot(br(1,:),br(2,:),'k')
-plot(trajec(1,:),trajec(2,:),'b--')
+trajec = imresize(trajec,[2,size(cline,2)]);
+theta_trajec = imresize(theta_trajec,[2,size(cline,2)]);
+
+
+%% Define Path Boundaries
+
+d = 5;
+
+ubX = cline(1,:) - d * cos(pi / 2 - theta);
+ubY = cline(2,:) + d * sin(pi / 2 - theta);
+ub1 = [ubX ; ubY];
+lbX = cline(1,:) + d * cos(pi / 2 - theta);
+lbY = cline(2,:) - d * sin(pi / 2 - theta);
+lb1 = [lbX ; lbY];
+
+% figure(2)
+% plot(bl(1,:),bl(2,:),'k')
+% hold on
+% plot(br(1,:),br(2,:),'k')
+% plot(lb1(1,:),lb1(2,:),'r')
+% plot(ub1(1,:), ub1(2,:),'r')
+% plot(trajec(1,:),trajec(2,:),'b--')
 
 nsteps = size(bl,2);
 T = 0.0:dt:nsteps*dt;
@@ -219,78 +238,168 @@ psi0 =   2.0;
 r0   =   0.0;
 
 z0 = [x0, u0, y0, v0, psi0, r0];
+u0 = [-0.04 , 5000];
            
-%% PATH SEGMENT SELECTION
+%% Path Segmentation: Start
 %Update to select new path (based on critical path indicies) within a for loop
+nsteps = 25;
 
 i = 1;
-nsteps = 50;
-bl = bl(:,i:i+nsteps-1);
-br = br(:,i:i:i+nsteps-1);
-cline = cline(:,i:i+nsteps-1);
-theta = theta(:,i:i+nsteps-1) ;
-trajec = trajec(:,i:i+nsteps-1);
-                      
+blSeg = bl(:,i:i+nsteps-1);
+brSeg = br(:,i:i:i+nsteps-1);
+clineSeg = cline(:,i:i+nsteps-1);
+thetaSeg = theta(:,i:i+nsteps-1) ;
+trajecSeg = trajec(:,i:i+nsteps-1);
+theta_trajecSeg = theta_trajec(:,i:i+nsteps-1) ;
+
+% lowboundsSeg = lb1(:,i:i+nsteps-1);
+% highboundsSeg = ub1(:,i:i+nsteps-1);
+
+lowboundsSeg = min(blSeg,brSeg);
+highboundsSeg = max(blSeg,brSeg);
+
 %% Path Generation using NL Optimization
 
-lowbounds = min(bl,br);
-highbounds = max(bl,br);
-
-[lb,ub]=bound_cons(nsteps,theta ,lowbounds, highbounds);
+[lb,ub]=bound_cons(nsteps,theta_trajecSeg ,lowboundsSeg, highboundsSeg, upperInputCons, lowerInputCons);
 
 
 options = optimoptions('fmincon','SpecifyConstraintGradient',true,...
                        'SpecifyObjectiveGradient',true) ;
                    
-endpoint = [trajec(1,nsteps),trajec(2,nsteps)];
-xrefs = x0:(endpoint(1)-x0)/(nsteps-1):endpoint(1);
-yrefs = y0:(endpoint(2)-y0)/(nsteps-1):endpoint(2);
+endpoints = [trajecSeg(1,nsteps),trajecSeg(2,nsteps),theta_trajecSeg(nsteps)]; %change back to reference trajectory after sizes are fixed
+xrefs = z0(1):(endpoints(1)-z0(1))/(nsteps-1):endpoints(1);
+yrefs = z0(3):(endpoints(2)-z0(3))/(nsteps-1):endpoints(2);
+thetarefs = z0(5):(endpoints(3)-z0(5))/(nsteps-1):endpoints(3);
 
-states0 = [xrefs;u0*ones(1,nsteps);yrefs;v0*ones(1,nsteps);theta;r0*ones(1,nsteps)];
+states0 = [xrefs;z0(2)*ones(1,nsteps);yrefs;z0(4)*ones(1,nsteps);thetarefs;z0(6)*ones(1,nsteps)];
 states0 = reshape(states0,1,nsteps*nstates);
 
-X0 = [states0, repmat([-0.04,4000],1,nsteps-1)];
+X0 = [states0, repmat(u0,1,nsteps-1)];
 
-% cf=@costfun;
-cf= @(z)costfun_segmt(z, trajec,nsteps);
-nc=@(z)nonlcon(z,z0);
+cf = @(z)costfun_segmt(z, trajecSeg, theta_trajecSeg, nsteps);
+nc = @(z)nonlcon(z,z0,nstates,ninputs);
 
 z=fmincon(cf,X0,[],[],[],[],lb',ub',nc,options);
 
 Y=reshape(z(1:6*nsteps),6,nsteps)';
-U=reshape(z(6*nsteps+1:end),2,nsteps-1)';
+z0 = Y(end , :);
+U1=reshape(z(6*nsteps+1:end),2,nsteps-1)';
+U= [U1;[U1(end,1) , U1(end,2)]];
+u0 = U(end,:);
+
+%% For loop attempt
+hold off
+
+%i = nsteps;
+%while Y(1,end) < cline(1,end) && Y(3,end) < cline(2,end)
+
+for i = nsteps : nsteps : 4*nsteps %(size(cline,2)-nsteps)
+   
+%     if i > size(cline,2)
+%         
+%         blSeg = bl(:,end);
+%         brSeg = br(:,end);
+%         clineSeg = cline(:,end);
+%         thetaSeg = theta(:,end) ;
+%         trajecSeg = trajec(:,end);
+%         theta_trajecSeg = theta_trajec(:,end);
+%         
+%     else
+        
+        blSeg = bl(:,i:i+nsteps-1);
+        brSeg = br(:,i:i+nsteps-1);
+        clineSeg = cline(:,i:i+nsteps-1);
+        thetaSeg = theta(:,i:i+nsteps-1) ;
+        trajecSeg = trajec(:,i:i+nsteps-1);
+        theta_trajecSeg = theta_trajec(:,i:i+nsteps-1) ;
+    
+    %end
+
+    lowboundsSeg = min(blSeg,brSeg);
+    highboundsSeg = max(blSeg,brSeg);
+
+    [lb,ub]=bound_cons(nsteps,theta_trajecSeg ,lowboundsSeg, highboundsSeg, upperInputCons, lowerInputCons);
+
+
+    options = optimoptions('fmincon','SpecifyConstraintGradient',true,...
+                           'SpecifyObjectiveGradient',true) ;
+
+    endpoints = [trajecSeg(1,end),trajecSeg(2,end),theta_trajecSeg(end)];    
+    xrefs = z0(1):(endpoints(1)-z0(1))/(nsteps-1):endpoints(1);
+    yrefs = z0(3):(endpoints(2)-z0(3))/(nsteps-1):endpoints(2);
+    thetarefs = z0(5):(endpoints(3)-z0(5))/(nsteps-1):endpoints(3);
+
+    states0 = [xrefs;z0(2)*ones(1,nsteps);yrefs;z0(4)*ones(1,nsteps);thetarefs;z0(6)*ones(1,nsteps)];
+    states0 = reshape(states0,1,nsteps*nstates);
+
+    X0 = [states0, repmat(u0,1,nsteps-1)];
+
+    cf= @(z)costfun_segmt(z, trajecSeg, theta_trajecSeg, (i - 1) + nsteps);
+    nc=@(z)nonlcon(z,z0,nstates,ninputs); %readd z0 as second entry if broken
+
+    z=fmincon(cf,X0,[],[],[],[],lb',ub',nc,options);
+
+    Ytemp=reshape(z(1:6*nsteps),6,nsteps)';
+    z0 = Ytemp(end , :);
+    Y = [Y ; Ytemp];
+    
+    Utemp=reshape(z(6*nsteps+1:end),2,nsteps-1)';
+    Utemp=[Utemp;[Utemp(end,1) , Utemp(end,2)]];
+    u0 = Utemp(end,:);
+    U = [U ; Utemp];
+     
+%     figure(5)
+%     plot(bl(1,:),bl(2,:),'k')
+%     plot(br(1,:),br(2,:),'k')
+%     plot(blSeg(1,:),blSeg(2,:),'r')
+%     hold on
+%     plot(brSeg(1,:),brSeg(2,:),'r')
+%     plot(Ytemp(:,1),Ytemp(:,3),'b')
+%     plot(cline(1,:) , cline(2,:),'k:')
+%     plot(endpoints(1) , endpoints(2) , 'o')
+    
+end
+hold off
+
+%% Plotting
 
 figure(3)
 plot(bl(1,:),bl(2,:),'k')
 hold on
 plot(br(1,:),br(2,:),'k')
 plot(Y(:,1),Y(:,3),'b')
-plot(highbounds(1,:) , highbounds(2,:) , 'r')
-plot(lowbounds(1,:) , lowbounds(2,:) , 'r')
+hold off
 
-%% REF PATH FOLLOWING WITHOUT OBSTACLES
 
+% plot(highbounds(1,:) , highbounds(2,:) , 'r')
+% plot(lowbounds(1,:) , lowbounds(2,:) , 'r')
+
+
+%% Test area
+
+[g,h,dg,dh]=nonlcon(z , x0 , nstates,ninputs);
+find( h~= 0 )
+    
 %% Functions
 
-function [lb,ub]=bound_cons(nsteps,theta ,lowbounds, highbounds) %,input_range
+function [lb,ub]=bound_cons(nsteps, theta_trajec ,lowbounds, highbounds,upperInputCons,lowerInputCons) %,input_range
 
 ub = [];
 lb = [];
 
-for i = 1:nsteps
+    for i = 1:nsteps
     
-ub = [ub,[highbounds(1,i), +inf,highbounds(2,i), +inf, theta(i)+pi/3, +inf]];
+        ub = [ub,[highbounds(1,i), +inf, highbounds(2,i), +inf, theta_trajec(i)+pi/3 , +inf]]; %theta_trajec(i)+pi/3
+        lb = [lb,[lowbounds(1,i), -inf, lowbounds(2,i), -inf, theta_trajec(i)-pi/3 , -inf]]; %theta_trajec(i)-pi/3
 
-lb = [lb,[lowbounds(1,i), -inf, lowbounds(2,i), -inf, theta(i)-pi/3, -inf]];
+    end
+
+ub = [ub,repmat(upperInputCons,1,nsteps-1) ]';
+lb = [lb,repmat(lowerInputCons,1,nsteps-1) ]';
 
 end
 
-ub = [ub,repmat([2500,0.5],1,nsteps-1) ]';
-lb = [lb,repmat([-5000,-0.5],1,nsteps-1) ]';
-
-end
-
-function [J, dJ] = costfun_segmt(z,trajec,nsteps) %ADD X IN Y IN THETA IN
+function [J, dJ] = costfun_segmt(z,trajec,theta_trajec, nsteps)
     if size(z,2) > size(z,1)
         z = z' ;
     end
@@ -299,31 +408,75 @@ function [J, dJ] = costfun_segmt(z,trajec,nsteps) %ADD X IN Y IN THETA IN
     zx = z(1:6*nsteps) ;
     zu = z(6*nsteps+1:end) ;
 
-    R = zeros(2*nsteps-2);
+    R = eye(2*nsteps-2);
 
     nom=zeros(6*nsteps,1) ;
     nom(1:6:6*nsteps) =  trajec(1,nsteps) ; %REPLACE W X IDX 
     nom(3:6:6*nsteps+2) = trajec(2,nsteps) ;
-    %nom(5:6:6*nsteps+4) = 1.8900 ;
+    nom(5:6:6*nsteps+4) = theta_trajec(nsteps) ;
 
-    Q = diag(repmat([1/10,0,1/10,0,0,0],1,nsteps));  %OPTIMIZE TO MAXIMIZE SPEED
+    Q = diag(repmat([1,0,1,0,1,0],1,nsteps));  %OPTIMIZE TO MAXIMIZE SPEED
 
     J = zu'*R*zu+(zx-nom)'*Q*(zx-nom) ;
     dJ = [2*Q*zx-2*Q*nom;...
           2*R*zu]' ;
 end
 
-function [g,h,dg,dh]=nonlcon(z , x0)
+function [g,h,dg,dh]=nonlconP3(z,nstates,ninputs)
+    
+    ntotal = nstates+ninputs;
+
+    if size(z,2)>size(z,1)
+        z = z' ;
+    end
+    nsteps = (size(z,1)+ninputs)/ntotal ;
+%     b = 1.5 ; 
+%     L = 3 ;
+%     dt = 0.05 ;
+
+    dt = 0.01;
+
+    zx=z(1:nsteps*nstates);
+    zu=z(nsteps*nstates+1:end);
+
+    g = zeros(nsteps,1) ;
+    dg = zeros(nsteps,5*nsteps-2) ;
+
+    h = zeros(nstates*nsteps,1) ;
+    dh = zeros(nstates*nsteps,5*nsteps-2);
+
+    h(1:nstates) = z(1:nstates,:) ;
+    dh(1:nstates,1:nstates)=eye(nstates);
+
+    for i=1:nsteps
+        if i==1
+            h(1:nstates) = z(1:nstates,:);
+            dh(1:nstates,1:nstates)=eye(nstates); 
+        else
+            h(3*i-2:3*i) = zx(3*i-2:3*i)-zx(3*i-5:3*i-3)-dt*odefun(zx(3*i-5:3*i-3),zu(2*i-3:2*i-2)) ;
+            dh(3*i-2:3*i,3*i-5:3*i) = [-eye(3)-dt*statepart(zx(3*i-5:3*i-3),zu(2*i-3:2*i-2)),eye(3)] ;
+            dh(3*i-2:3*i,3*nsteps+2*i-3:3*nsteps+2*i-2) = -dt*inputpart(zx(3*i-5:3*i-3),zu(2*i-3:2*i-2)) ;
+        end
+
+    end
+
+    dg = dg' ;
+    dh= dh' ;
+end
+
+function [g,h,dg,dh]=nonlcon(z , x0 , nstates,ninputs)
+
+ntotal = nstates+ninputs;
 
     if size(z,2) > size(z,1)
         z = z' ;
     end
     
-    nsteps = (size(z,1)+2)/8 ;
+    nsteps = (size(z,1)+ninputs)/ntotal ;
     dt = 0.01 ;
 
-    zx = z(1:nsteps*6) ;
-    zu = z(nsteps*6+1:end) ;
+    zx = z(1:nsteps*nstates) ;
+    zu = z(nsteps*ninputs+1:end) ;
     
     g = [];
     dg = [];
@@ -334,8 +487,11 @@ function [g,h,dg,dh]=nonlcon(z , x0)
     for i = 1:nsteps
         
         if i == 1
-            h(1:6) = z(1:6,:) - x0' ;
-            dh(1:6,1:6) = eye(6) ; 
+            h(1:nstates) = z(1:nstates,:) - x0' ;
+            dh(1:nstates,1:nstates)=eye(nstates);
+            
+%             h(1:6) = z(1:6,:) - x0' ;
+%             dh(1:6,1:6) = eye(6) ; 
         else
             h(6*i-5:6*i) = zx(6*i-5:6*i)-zx(6*i-11:6*i-6)-dt*odefun(zx(6*i-11:6*i-6),zu(2*i-3:2*i-2)) ;
                            
@@ -404,57 +560,6 @@ dzdt =   [x(2)*cos(x(5))-x(4)*sin(x(5));...
           (F_yf*a*cos(delta_f)-F_yr*b)/Iz];
 end
 
-function [dx] = odefunOLD(Y,Uin)
-
-% m    = 1400;                % Mass of Car
-% N_w  = 2.00;                % ?? 
-% f    = 0.01;                % ??
-% I_z  = 2667;                % Momemnt of Inertia
-% a    = 1.35;                % Front Axle to COM
-% b    = 1.45;                % Rear Axle to Com
-% B_y  = 0.27;                % Empirically Fit Coefficient
-% C_y  = 1.35;  1.2               % Empirically Fit Coefficient
-% D_y  = 0.70;                % Empirically Fit Coefficient
-% E_y  = -1.6;                % Empirically Fit Coefficient
-% g    = 9.806;               % Graviational Constant
-% 
-% alpha_f = (Uin(2) - atan((Y(4)+a*Y(6))/Y(2)));
-% alpha_r = (- atan((Y(4)-b*Y(6))/Y(2)));
-% 
-% psi_yf = ((1-E_y)*alpha_f + E_y/B_y*atan(B_y*alpha_f));  % S_hy = 0
-% psi_yr = ((1-E_y)*alpha_r + E_y/B_y*atan(B_y*alpha_r));  % S_hy = 0
-% 
-% 
-% F_yf = (b/(a+b)*m*g*D_y*sin(C_y*atan(B_y*psi_yf))); %S_vy = 0;
-% F_yr = (a/(a+b)*m*g*D_y*sin(C_y*atan(B_y*psi_yr))); %S_vy = 0;
-% 
-% dx = [          Y(2)*cos(Y(5))-Y(4)*sin(Y(5));
-%            1/m*(-f*m*g+N_w*Uin(1)-F_yf*sin(Uin(2)))+Y(4)*Y(6);
-%                      Y(2)*sin(Y(5))+Y(4)*cos(Y(5));
-%                 1/m*(F_yf*cos(Uin(2))+F_yr)-Y(2)*Y(6);
-%                                     Y(6);
-%                       1/I_z*(a*F_yf*cos(Uin(2))-b*F_yr)];
-
-alpha_f = (Uin(2) - atan((Y(4)+1.35*Y(6))/Y(2)));
-alpha_r = (- atan((Y(4)-1.45*Y(6))/Y(2)));
-
-psi_yf = ((1-(-1.6))*alpha_f + (-1.6)/0.27*atan(0.27*alpha_f));  % S_hy = 0
-psi_yr = ((1-(-1.6))*alpha_r + (-1.6)/0.27*atan(0.27*alpha_r));  % S_hy = 0
-
-
-F_yf = (1.45/(1.35+1.45)*1400*9.806*0.7*sin(1.35*atan(0.27*psi_yf))); %S_vy = 0;
-F_yr = (1.35/(1.35+1.45)*1400*9.806*0.7*sin(1.35*atan(0.27*psi_yr))); %S_vy = 0;
-
-dx = [          Y(2)*cos(Y(5))-Y(4)*sin(Y(5));
-           1/1400*(-0.01*1400*9.806+2.00*Uin(1)-F_yf*sin(Uin(2)))+Y(4)*Y(6);
-                     Y(2)*sin(Y(5))+Y(4)*cos(Y(5));
-                1/1400*(F_yf*cos(Uin(2))+F_yr)-Y(2)*Y(6);
-                                    Y(6);
-                      1/2667*(1.35*F_yf*cos(Uin(2))-1.45*F_yr)];
-                  
-end
-
-
 function [pd] = statepart_hand(Y_vec,U_in)
 
 %Initialize Variables.
@@ -481,8 +586,10 @@ dphi_yr = [0, (1 - E_y + temp4)*dalpha_r(2), 0, (1 - E_y + temp4)*dalpha_r(4) ..
 %Partial Derivatives of F_yf and F_yr.
 phi_yf = (1 - E_y)*alpha_f + E_y*atan(B_y*alpha_f)/B_y;
 phi_yr = (1 - E_y)*alpha_r + E_y*atan(B_y*alpha_r)/B_y;
-F_zf = b*m*g/(a+b); F_yf = F_zf*D_y*sin(C_y*atan(B_y*phi_yf));
-F_zr = a*m*g/(a+b); F_yr = F_zr*D_y*sin(C_y*atan(B_y*phi_yr));
+F_zf = b*m*g/(a+b); 
+F_yf = F_zf*D_y*sin(C_y*atan(B_y*phi_yf));
+F_zr = a*m*g/(a+b); 
+F_yr = F_zr*D_y*sin(C_y*atan(B_y*phi_yr));
 temp5 = F_zf*D_y*cos(C_y*atan(B_y*phi_yf))*C_y*(1/(1+(B_y*phi_yf)^2))*B_y;
 temp6 = F_zr*D_y*cos(C_y*atan(B_y*phi_yr))*C_y*(1/(1+(B_y*phi_yr)^2))*B_y;
 dF_yf = [0, temp5*dphi_yf(2), 0, temp5*dphi_yf(4), 0, temp5*dphi_yf(6)];
