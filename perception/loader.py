@@ -31,13 +31,13 @@ class MyDataset(Dataset):
         image = Image.open(self.image_fns[index])
         image = image.resize(self.dim)
         convert_tensor = transforms.ToTensor()
-        return convert_tensor(image)
+        image = torch.tensor(convert_tensor(image), requires_grad=True)
+        return image
 
     def __getitem__(self, index):
         image = self.getImage(index)
-        label = np.array([0, 0, 0])
-        label[self.labels[index]] = 1
-        label = torch.tensor(label)
+        label = self.labels[index]
+        label = torch.tensor(label, dtype=torch.long)
         return image, label
 
 def writeFirstSubmission():
