@@ -1,0 +1,232 @@
+/home/wongna/ROB-Controls-Project/perception/loader.py:34: UserWarning: To copy construct from a tensor, it is recommended to use sourceTensor.clone().detach() or sourceTensor.clone().detach().requires_grad_(True), rather than torch.tensor(sourceTensor).
+  image = torch.tensor(convert_tensor(image), requires_grad=True)
+7573 images read.
+7573 labels read.
+Dataloaders created, train has 5301 samples and val has 2272 samples.
+Training epoch: 0 of 100
+Started Iteration: 0 of 42
+Backward done on this iteration
+Model finished running iteration 0 
+
+Loss: tensor(1.0880, grad_fn=<NllLossBackward0>)
+Started Iteration: 1 of 42
+Backward done on this iteration
+Model finished running iteration 1 
+
+Loss: tensor(31672992., grad_fn=<NllLossBackward0>)
+Started Iteration: 2 of 42
+Backward done on this iteration
+Model finished running iteration 2 
+
+Loss: tensor(20.0490, grad_fn=<NllLossBackward0>)
+Started Iteration: 3 of 42
+Backward done on this iteration
+Model finished running iteration 3 
+
+Loss: tensor(3909.8428, grad_fn=<NllLossBackward0>)
+Started Iteration: 4 of 42
+Backward done on this iteration
+Model finished running iteration 4 
+
+Loss: tensor(14.1363, grad_fn=<NllLossBackward0>)
+Started Iteration: 5 of 42
+Backward done on this iteration
+Model finished running iteration 5 
+
+Loss: tensor(323.2110, grad_fn=<NllLossBackward0>)
+Started Iteration: 6 of 42
+Backward done on this iteration
+Model finished running iteration 6 
+
+Loss: tensor(24.9883, grad_fn=<NllLossBackward0>)
+Started Iteration: 7 of 42
+Backward done on this iteration
+Model finished running iteration 7 
+
+Loss: tensor(76.3969, grad_fn=<NllLossBackward0>)
+Started Iteration: 8 of 42
+Backward done on this iteration
+Model finished running iteration 8 
+
+Loss: tensor(846.6001, grad_fn=<NllLossBackward0>)
+Started Iteration: 9 of 42
+Backward done on this iteration
+Model finished running iteration 9 
+
+Loss: tensor(25.2642, grad_fn=<NllLossBackward0>)
+Started Iteration: 10 of 42
+Backward done on this iteration
+Model finished running iteration 10 
+
+Loss: tensor(395.2239, grad_fn=<NllLossBackward0>)
+Started Iteration: 11 of 42
+Backward done on this iteration
+Model finished running iteration 11 
+
+Loss: tensor(639.5677, grad_fn=<NllLossBackward0>)
+Started Iteration: 12 of 42
+Backward done on this iteration
+Model finished running iteration 12 
+
+Loss: tensor(1146.9948, grad_fn=<NllLossBackward0>)
+Started Iteration: 13 of 42
+Backward done on this iteration
+Model finished running iteration 13 
+
+Loss: tensor(11.1482, grad_fn=<NllLossBackward0>)
+Started Iteration: 14 of 42
+Backward done on this iteration
+Model finished running iteration 14 
+
+Loss: tensor(28.8446, grad_fn=<NllLossBackward0>)
+Started Iteration: 15 of 42
+Backward done on this iteration
+Model finished running iteration 15 
+
+Loss: tensor(97.3898, grad_fn=<NllLossBackward0>)
+Started Iteration: 16 of 42
+Backward done on this iteration
+Model finished running iteration 16 
+
+Loss: tensor(150.5780, grad_fn=<NllLossBackward0>)
+Started Iteration: 17 of 42
+Backward done on this iteration
+Model finished running iteration 17 
+
+Loss: tensor(36.5821, grad_fn=<NllLossBackward0>)
+Started Iteration: 18 of 42
+Backward done on this iteration
+Model finished running iteration 18 
+
+Loss: tensor(42.0479, grad_fn=<NllLossBackward0>)
+Started Iteration: 19 of 42
+Backward done on this iteration
+Model finished running iteration 19 
+
+Loss: tensor(67.6651, grad_fn=<NllLossBackward0>)
+Started Iteration: 20 of 42
+Backward done on this iteration
+Model finished running iteration 20 
+
+Loss: tensor(30.1862, grad_fn=<NllLossBackward0>)
+Started Iteration: 21 of 42
+Backward done on this iteration
+Model finished running iteration 21 
+
+Loss: tensor(11.6100, grad_fn=<NllLossBackward0>)
+Started Iteration: 22 of 42
+Backward done on this iteration
+Model finished running iteration 22 
+
+Loss: tensor(10.7646, grad_fn=<NllLossBackward0>)
+Started Iteration: 23 of 42
+Backward done on this iteration
+Model finished running iteration 23 
+
+Loss: tensor(9.3242, grad_fn=<NllLossBackward0>)
+Started Iteration: 24 of 42
+Backward done on this iteration
+Model finished running iteration 24 
+
+Loss: tensor(13.5811, grad_fn=<NllLossBackward0>)
+Started Iteration: 25 of 42
+Backward done on this iteration
+Model finished running iteration 25 
+
+Loss: tensor(5.0309, grad_fn=<NllLossBackward0>)
+Started Iteration: 26 of 42
+Backward done on this iteration
+Model finished running iteration 26 
+
+Loss: tensor(6.6332, grad_fn=<NllLossBackward0>)
+Started Iteration: 27 of 42
+Backward done on this iteration
+Model finished running iteration 27 
+
+Loss: tensor(4.2112, grad_fn=<NllLossBackward0>)
+Started Iteration: 28 of 42
+Backward done on this iteration
+Model finished running iteration 28 
+
+Loss: tensor(1.6055, grad_fn=<NllLossBackward0>)
+Started Iteration: 29 of 42
+Backward done on this iteration
+Model finished running iteration 29 
+
+Loss: tensor(4.1105, grad_fn=<NllLossBackward0>)
+Started Iteration: 30 of 42
+Backward done on this iteration
+Model finished running iteration 30 
+
+Loss: tensor(6.4651, grad_fn=<NllLossBackward0>)
+Started Iteration: 31 of 42
+Backward done on this iteration
+Model finished running iteration 31 
+
+Loss: tensor(5.7769, grad_fn=<NllLossBackward0>)
+Started Iteration: 32 of 42
+Backward done on this iteration
+Model finished running iteration 32 
+
+Loss: tensor(5.0741, grad_fn=<NllLossBackward0>)
+Started Iteration: 33 of 42
+Backward done on this iteration
+Model finished running iteration 33 
+
+Loss: tensor(3.2075, grad_fn=<NllLossBackward0>)
+Started Iteration: 34 of 42
+Backward done on this iteration
+Model finished running iteration 34 
+
+Loss: tensor(2.8655, grad_fn=<NllLossBackward0>)
+Started Iteration: 35 of 42
+Backward done on this iteration
+Model finished running iteration 35 
+
+Loss: tensor(1.9808, grad_fn=<NllLossBackward0>)
+Started Iteration: 36 of 42
+Backward done on this iteration
+Model finished running iteration 36 
+
+Loss: tensor(1.6994, grad_fn=<NllLossBackward0>)
+Started Iteration: 37 of 42
+Backward done on this iteration
+Model finished running iteration 37 
+
+Loss: tensor(2.1723, grad_fn=<NllLossBackward0>)
+Started Iteration: 38 of 42
+Backward done on this iteration
+Model finished running iteration 38 
+
+Loss: tensor(6.0272, grad_fn=<NllLossBackward0>)
+Started Iteration: 39 of 42
+Backward done on this iteration
+Model finished running iteration 39 
+
+Loss: tensor(0.8096, grad_fn=<NllLossBackward0>)
+Started Iteration: 40 of 42
+Backward done on this iteration
+Model finished running iteration 40 
+
+Loss: tensor(6.3555, grad_fn=<NllLossBackward0>)
+Started Iteration: 41 of 42
+Backward done on this iteration
+Model finished running iteration 41 
+
+Loss: tensor(7.6285, grad_fn=<NllLossBackward0>)
+    
+**************************STARTED VALIDATION CHECK**************************
+PERCENTAGE CORRECT IS 0.3842429577464789%
+**************************ENDED VALIDATION CHECK**************************
+Traceback (most recent call last):
+  File "training.py", line 107, in <module>
+    model = train(train_loader, val_loader, 100, loadModel=False, loadFN=None)
+  File "training.py", line 89, in train
+    torch.save({
+  File "/home/wongna/.local/lib/python3.8/site-packages/torch/serialization.py", line 376, in save
+    with _open_file_like(f, 'wb') as opened_file:
+  File "/home/wongna/.local/lib/python3.8/site-packages/torch/serialization.py", line 230, in _open_file_like
+    return _open_file(name_or_buffer, mode)
+  File "/home/wongna/.local/lib/python3.8/site-packages/torch/serialization.py", line 211, in __init__
+    super(_open_file, self).__init__(open(name, mode))
+FileNotFoundError: [Errno 2] No such file or directory: './models/model_epoch0_losstensor(31680998., grad_fn=<AddBackward0>)_vacc0.3842429577464789.pt'
