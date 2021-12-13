@@ -6,8 +6,9 @@ import torch
 from torch import nn
 from torchsummary import summary
 import torchvision
+import torch.nn.functional as F
 
-from model import OurAlexNet
+from model import OurAlexNet, faster_rcnn, BB_model
 from loader import MyDataset, readTrImages
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -28,7 +29,8 @@ def test_model(model, val_loader):
         # get the inputs; data is a list of [batch, labels]
         batch, labels = data
         batch = batch.float()
-        outputs = model(batch)
+        with torch.no_grad():
+            outputs = model(batch)
         num_correct = torch.sum(torch.argmax(outputs, dim=1) == labels).item()
         total_correct += num_correct 
         total_checked += len(outputs)
@@ -39,13 +41,15 @@ def test_model(model, val_loader):
 
 
 def train(train_loader, val_loader, num_epochs, loadModel=False, loadFN=None):
-    model = OurAlexNet()
+    model = BB_model()
     criterion = nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(params=model.parameters(), lr=0.01)
+    lr = 0.04
+    optimizer = torch.optim.Adam(params=model.parameters(), lr=lr)
     best_loss = 100000000
     best_val_acc = 0
-    best_model = OurAlexNet()
+    best_model = BB_model()
     start_epoch = 0
+    C = 1000
 
     if loadModel:
         checkpoint = torch.load(loadFN)
@@ -63,20 +67,27 @@ def train(train_loader, val_loader, num_epochs, loadModel=False, loadFN=None):
         running_loss = 0.0
         model.train()
         for i, data in enumerate(train_loader):
+
             # get the inputs; data is a list of [batch, labels]
             print("Started Iteration: " + str(i) + " of " + str(num_iters))
-            batch, labels = data
-            batch = batch.float()
-            # zero the parameter gradients
-            optimizer.zero_grad()
-            outputs = model(batch)
-            loss = criterion(outputs, labels)
+            batch, targets = data
+            y_class = targets["labels"]
+            y_mask = targets["masks"]
+            out_class, out_mask = model(batch)
+            loss_class = F.cross_entropy(out_class, y_class, reduction="sum")
+            loss_bb = F.l1_loss(out_mask, y_mask, reduction="none").sum(1)
+            loss_bb = loss_bb.sum()
+            loss = loss_class + loss_bb/C
+            #loss = criterion(outputs, targets)
             loss.backward()
             running_loss += loss       
-            print("Backward done on this iteration")
+            print("Backward done on this iteration, learning rate - ", lr)
             optimizer.step()
             print("Model finished running iteration", i, "\n")
             print("Loss:", loss)
+            print("Running Loss:", running_loss)
+            
+
 
         # Validation Loss
         val_acc = test_model(model, val_loader)
@@ -100,7 +111,7 @@ def train(train_loader, val_loader, num_epochs, loadModel=False, loadFN=None):
     return best_model
 
 if __name__ == '__main__':
-    train_dataset, train_loader, test_dataset, val_loader = readTrImages(128, 0.7, dim=224)
+    train_loader, val_loader = readTrImages(32, 0.7, dim=800)
     if len(sys.argv) > 1:
         model = train(train_loader, val_loader, 100, loadModel=True, loadFN=sys.argv[1])
     else:
