@@ -68,7 +68,7 @@ class MyDataset(Dataset):
         bb = np.array(bb)
         bb = bb.astype(np.int)
         Y[bb[0]:bb[1], bb[1]:bb[2]] = 1.
-        bb = [bb[2], bb[0], bb[3], bb[1]]
+        bb = torch.tensor([bb[2], bb[0], bb[3], bb[1]], dtype=torch.long)
         mask = Image.fromarray(np.uint8(cm.gist_earth(Y)*255))
         if self.dim:
             mask = mask.resize(self.dim)

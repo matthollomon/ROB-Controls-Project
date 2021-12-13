@@ -72,10 +72,10 @@ def train(train_loader, val_loader, num_epochs, loadModel=False, loadFN=None):
             print("Started Iteration: " + str(i) + " of " + str(num_iters))
             batch, targets = data
             y_class = targets["labels"]
-            y_mask = targets["masks"]
-            out_class, out_mask = model(batch)
+            y_bb = targets["boxes"]
+            out_class, out_bb = model(batch)
             loss_class = F.cross_entropy(out_class, y_class, reduction="sum")
-            loss_bb = F.l1_loss(out_mask, y_mask, reduction="none").sum(1)
+            loss_bb = F.l1_loss(out_bb, y_bb, reduction="none").sum(1)
             loss_bb = loss_bb.sum()
             loss = loss_class + loss_bb/C
             #loss = criterion(outputs, targets)
@@ -111,7 +111,7 @@ def train(train_loader, val_loader, num_epochs, loadModel=False, loadFN=None):
     return best_model
 
 if __name__ == '__main__':
-    train_loader, val_loader = readTrImages(32, 0.7, dim=800)
+    train_loader, val_loader = readTrImages(32, 0.7, dim=200)
     if len(sys.argv) > 1:
         model = train(train_loader, val_loader, 100, loadModel=True, loadFN=sys.argv[1])
     else:

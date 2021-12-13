@@ -116,7 +116,7 @@ class BB_model(nn.Module):
         self.features1 = nn.Sequential(*layers[:6])
         self.features2 = nn.Sequential(*layers[6:])
         self.classifier = nn.Sequential(nn.BatchNorm1d(512), nn.Linear(512, 3))
-        self.bb = nn.Sequential(nn.BatchNorm1d(512), nn.Linear(512, 3))
+        self.bb = nn.Sequential(nn.BatchNorm1d(512), nn.Linear(512, 4))
         
     def forward(self, x):
         x = self.features1(x)
