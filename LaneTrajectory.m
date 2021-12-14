@@ -57,6 +57,8 @@ U_left = [repmat([0.1, 2400],100,1);
     repmat([0.03, 0],150,1);
 ];
 
+timeLeft = size(U_left,1) * 0.01;
+
 U_right = [repmat([-0.1, 2400],100,1);
     repmat([0.04, 2400],105,1);
     repmat([0.0, 2200],533,1);
@@ -86,30 +88,47 @@ U_right = [repmat([-0.1, 2400],100,1);
     repmat([0.03, 0],150,1);
 ];
    
-time = size(U_left,1) * 0.01;
+timeRight = size(U_right,1) * 0.01;
 
 x0 = [287 , 5 , -176 , 0 , 2 , 0];
 endpoint = [1470 , 810];
 
-[Yleft,Tright] = forwardIntegrateControlInput(U_left,x0);
+[Yleft,Tleft] = forwardIntegrateControlInput(U_left,x0);
 [Yright,Tright] = forwardIntegrateControlInput(U_right,x0);
 
-figure(2)
+%% Plotting
+
+figure(1)
 plot(bl(1,:),bl(2,:),'k')
 hold on
 plot(br(1,:),br(2,:),'k')
 plot(cline(1,:),cline(2,:),'--k')
 plot(Yleft(:,1),Yleft(:,3),'b')
-plot(Yright(:,1),Yright(:,3),'b')
+plot(Yright(:,1),Yright(:,3),'r')
 hold off
 
-% figure(3)
-% yyaxis left
-% plot(T,U_ref_left(:,1),'r')
-% ylabel('Steeting Angle')
-% hold on
-% yyaxis right
-% plot(T,U_ref_left(:,2),'r')
-% ylabel('Acceleration')
-% xlabel('Time')
-% hold off
+figure(2)
+yyaxis left
+plot(Tleft,U_left(:,1),'b')
+ylabel('Steeting Angle')
+hold on
+yyaxis right
+plot(Tleft,U_left(:,2),'r')
+ylabel('Acceleration')
+xlabel('Time')
+title('Left Lane Inputs')
+set(figure(2),'defaultAxesColorOrder',[[0 0 1]; [1 0 0]]);
+hold off
+
+figure(3)
+yyaxis left
+plot(Tright,U_right(:,1),'b')
+ylabel('Steeting Angle')
+hold on
+yyaxis right
+plot(Tright,U_right(:,2),'r')
+ylabel('Acceleration')
+xlabel('Time')
+title('Right Lane Inputs')
+set(figure(3),'defaultAxesColorOrder',[[0 0 1]; [1 0 0]]);
+hold off
