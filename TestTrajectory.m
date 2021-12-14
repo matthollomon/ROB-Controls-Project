@@ -27,7 +27,7 @@ dt = 0.01;
 
 %U = vector of constant steering angle, acceleration for given time
 
-U = [repmat([-0.04, 2400],100,1);
+U_left = [repmat([-0.04, 2400],100,1);
     repmat([0, 2400],200,1);
     repmat([0.0, 2400],30,1);
     repmat([0.0, 2400],100,1);
@@ -161,10 +161,10 @@ U = [repmat([-0.04, 2400],100,1);
     repmat([0.012 , 0],200,1);
     repmat([0 , 5000],850,1)]; 
     
-time = size(U,1) * 0.01;
+time = size(U_left,1) * 0.01;
 
-U_ref = U;
-save('ROB535_ControlProject_part1_Team19','U')
+U_ref_left = U_left;
+save('ROB535_ControlProject_part1_Team19','U_left')
 
 % deltafSmooth = smooth(U(:,1));
 % accSmooth = smooth(U(:,2)); 
@@ -173,7 +173,7 @@ save('ROB535_ControlProject_part1_Team19','U')
 x0 = [287 , 5 , -176 , 0 , 2 , 0];
 endpoint = [1470 , 810];
 
-[Y,T] = forwardIntegrateControlInput(U_ref,x0);
+[Y,T] = forwardIntegrateControlInput(U_ref_left,x0);
 Y_ref = Y;
 
 % x0 = Y(end,:);

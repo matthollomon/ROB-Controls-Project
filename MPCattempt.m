@@ -295,6 +295,7 @@ for i = 1 %1:length(T)-1
     
     %simulate model
     [yTemp , fakeTime] = forwardIntegrateControlInput(Uinput,Y(:,i));
+    [yTemp , fakeTime] = forwardIntegrateControlInput(Uinput,Y(:,i));
     
     %store final state
     Y(:,i+1) = yTemp(end,:)';
