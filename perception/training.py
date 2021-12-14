@@ -31,9 +31,11 @@ def test_model(model, val_loader):
         batch = batch.float()
         with torch.no_grad():
             outputs = model(batch)
-        num_correct = torch.sum(torch.argmax(outputs, dim=1) == labels).item()
+        # print(outputs)
+        # print(labels['labels'])
+        num_correct = torch.sum(torch.argmax(outputs[0], dim=1) == labels['labels']).item()
         total_correct += num_correct 
-        total_checked += len(outputs)
+        total_checked += len(outputs[0])
     percentage_corr = total_correct/total_checked
     print("PERCENTAGE CORRECT IS " + str(percentage_corr) + "%")
     print("**************************ENDED VALIDATION CHECK**************************")
@@ -43,7 +45,7 @@ def test_model(model, val_loader):
 def train(train_loader, val_loader, num_epochs, loadModel=False, loadFN=None):
     model = BB_model()
     criterion = nn.CrossEntropyLoss()
-    lr = 0.04
+    lr = 1e-3
     optimizer = torch.optim.Adam(params=model.parameters(), lr=lr)
     best_loss = 100000000
     best_val_acc = 0
@@ -61,6 +63,7 @@ def train(train_loader, val_loader, num_epochs, loadModel=False, loadFN=None):
         print("Loaded Model")
 
     num_iters = len(train_loader)
+    # val_acc = test_model(model, val_loader)
 
     for epoch in range(start_epoch, num_epochs):  # loop over the dataset multiple times  
         print("Training epoch: " + str(epoch) + " of " + str(num_epochs))
@@ -96,7 +99,7 @@ def train(train_loader, val_loader, num_epochs, loadModel=False, loadFN=None):
             best_loss = running_loss
             best_model = model
             best_val_acc = val_acc
-        model_fn = "./models/model_epoch" + str(epoch) + "_loss" + str(running_loss) + "_vacc" + str(val_acc) + ".pt"
+        model_fn = "./models/model_epoch_new_model_" + str(epoch) + "_loss" + ".pt"
         torch.save({
         'epoch': (epoch+1),
         'model_state_dict': model.state_dict(),
@@ -111,7 +114,7 @@ def train(train_loader, val_loader, num_epochs, loadModel=False, loadFN=None):
     return best_model
 
 if __name__ == '__main__':
-    train_loader, val_loader = readTrImages(32, 0.7, dim=200)
+    train_loader, val_loader = readTrImages(16, 0.7, dim=200)
     if len(sys.argv) > 1:
         model = train(train_loader, val_loader, 100, loadModel=True, loadFN=sys.argv[1])
     else:

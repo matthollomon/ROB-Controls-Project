@@ -242,6 +242,7 @@ def readTrImages(batch_size, split_ratio, dim=256, shuffle=False, train=False):
                 tmp_fn = './deploy/trainval/' + folder + "/" + file
                 images.append(tmp_fn)
                 #labels.append(tmp_label)
+                # print(tmp_fn)
                 bbox_list = readBbox(tmp_fn)
                 labels.append(bbox_list)
                                              
@@ -259,7 +260,7 @@ def readTrImages(batch_size, split_ratio, dim=256, shuffle=False, train=False):
     val_images = [images[i] for i in idx_shuffled[split_idx:]]
     val_labels = [labels[i] for i in idx_shuffled[split_idx:]]
 
-    train_dataset, train_loader = createDataset(train_images, train_labels, batch_size, dim)
+    train_dataset, train_loader = createDataset(images, labels, batch_size, dim)
 
     val_dataset, val_loader = createDataset(val_images, val_labels, batch_size, dim)
     print("Dataloaders created, train has " + str(len(train_dataset)) + " samples and val has " + str(len(val_dataset)) + " samples.")
@@ -267,5 +268,5 @@ def readTrImages(batch_size, split_ratio, dim=256, shuffle=False, train=False):
 
 # To test
 if __name__ == '__main__':
-    train_loader, val_loader = readTrImages(8, 0.7, dim=False)
+    train_loader, val_loader = readTrImages(1, 0.7, dim=False)
 
