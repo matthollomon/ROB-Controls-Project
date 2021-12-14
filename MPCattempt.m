@@ -186,7 +186,7 @@ Fmax = 0.7 * mass * g;
 %% Generate A, B matricies
 dt = 0.01;
 
-[A,B,f] = DiscretizedLinearizedModel( Y_ref, U_ref);
+[A,B,f] = DiscretizedLinearizedModel( Y_ref, U_ref,dt);
 
 
 %% Number of decision variables
@@ -210,6 +210,7 @@ Y(:,1) = y0;
 
 %applied inputs
 U = NaN(ninputs,length(T));
+U(:,1) = U_ref(:,1);
 
 %input from QP
 u_mpc = NaN(ninputs,length(T));
@@ -283,7 +284,7 @@ for i = 1 : testLength
     Q=[1,0.1,1,0.1,0.5,0.1];
     
     %cost for inputs CHANGE STEERING TO 0.1?
-    R=[0.1,0.1];
+    R=[0.5,2];
     
     H=diag([repmat(Q,[1,npred_i+1]),repmat(R,[1,npred_i])]);
     
@@ -295,16 +296,11 @@ for i = 1 : testLength
 %     nstates*(npred_i+1)+ninputs
 %     x(nstates*(npred_i+1)+1:nstates*(npred_i+1)+ninputs)
     u_mpc(:,i) = x(nstates*(npred_i+1)+1:nstates*(npred_i+1)+ninputs);
-    %u_mpc(:,i)
     
 %     get input
-%     U_ref(:,i)
     U(:,i) = u_mpc(:,i) + U_ref(:,i);
     
-    %Uinput = [U(2,i)',U(1,i)'];
-    
     %simulate model
-    %[yTemp , fakeTime] = forwardIntegrateControlInput(Uinput,Y(:,i));
     
     [~,ztemp]=ode45(@(t,x)bike(t,x,0,U(:,i)),[0 dt], Y(:,i));
     
@@ -344,7 +340,7 @@ hold off
 %% Functions
 
 % INCLUDE i EVERYWHERE IT SHOULD APPEAR
-function [A, B, f] = DiscretizedLinearizedModel(Xbar_k, Ubar_k)
+function [A, B, f] = DiscretizedLinearizedModel(Xbar_k, Ubar_k,dt)
 %Ts = sampling time
 m = 1400;
 g = 9.806;
@@ -405,15 +401,15 @@ dFyfdr = @(i) dFyfdaf(i)*dafdr(i);
 dFyrdr = @(i) dFyrdar(i)*dardr(i);
 dFyfddeltaf = @(i) dFyfdaf(i)*dafddeltaf;
 
-A = @(i) [ 0, 0, 0, 0, 0, 0; ...
-    cos(psi(i)), -1.0/m*dFyfdu(i)*sin(deltaf(i)), sin(psi(i)), 1.0/m*(dFyfdu(i)*cos(deltaf(i)) + dFyrdu(i)) - r(i), 0, 1.0/Iz*(a*dFyfdu(i)*cos(deltaf(i)) - b*dFyrdu(i)); ...
-    0, 0, 0, 0, 0, 0; ...
-    -sin(psi(i)), -1.0/m*dFyfdv(i)*sin(deltaf(i)) + r(i), cos(psi(i)), 1.0/m*(dFyfdv(i)*cos(deltaf(i)) + dFyrdv(i)), 0, 1.0/Iz*(a*dFyfdv(i)*cos(deltaf(i)) - b*dFyrdv(i)); ...
-    -u(i)*sin(psi(i)) - v(i)*cos(psi(i)), 0, u(i)*cos(psi(i)) - v(i)*sin(psi(i)), 0, 0, 0; ...
-    0, -1.0/m*dFyfdr(i)*sin(deltaf(i)) + v(i), 0, 1.0/m*(dFyfdr(i)*cos(deltaf(i)) + dFyrdr(i)) - u(i), 1.0, 1.0/Iz*(a*dFyfdr(i)*cos(deltaf(i)) - b*dFyrdr(i))]';
+A = @(i) eye(6) + dt*[ 0, 0, 0, 0, 0, 0; ...
+                        cos(psi(i)), -1.0/m*dFyfdu(i)*sin(deltaf(i)), sin(psi(i)), 1.0/m*(dFyfdu(i)*cos(deltaf(i)) + dFyrdu(i)) - r(i), 0, 1.0/Iz*(a*dFyfdu(i)*cos(deltaf(i)) - b*dFyrdu(i)); ...
+                        0, 0, 0, 0, 0, 0; ...
+                        -sin(psi(i)), -1.0/m*dFyfdv(i)*sin(deltaf(i)) + r(i), cos(psi(i)), 1.0/m*(dFyfdv(i)*cos(deltaf(i)) + dFyrdv(i)), 0, 1.0/Iz*(a*dFyfdv(i)*cos(deltaf(i)) - b*dFyrdv(i)); ...
+                        -u(i)*sin(psi(i)) - v(i)*cos(psi(i)), 0, u(i)*cos(psi(i)) - v(i)*sin(psi(i)), 0, 0, 0; ...
+                        0, -1.0/m*dFyfdr(i)*sin(deltaf(i)) + v(i), 0, 1.0/m*(dFyfdr(i)*cos(deltaf(i)) + dFyrdr(i)) - u(i), 1.0, 1.0/Iz*(a*dFyfdr(i)*cos(deltaf(i)) - b*dFyrdr(i))]';
 
-B = @(i) [ 0, -1.0/m*(dFyfddeltaf(i)*sin(deltaf(i)) + Fyf(i)*cos(deltaf(i))), 0, 1.0/m*(dFyfddeltaf(i)*cos(deltaf(i)) - Fyf(i)*sin(deltaf(i))), 0, a/Iz*(dFyfddeltaf(i)*cos(deltaf(i)) - Fyf(i)*sin(deltaf(i))); ...
-    0, Nw/m, 0, 0, 0, 0]';
+B = @(i) dt*[ 0, -1.0/m*(dFyfddeltaf(i)*sin(deltaf(i)) + Fyf(i)*cos(deltaf(i))), 0, 1.0/m*(dFyfddeltaf(i)*cos(deltaf(i)) - Fyf(i)*sin(deltaf(i))), 0, a/Iz*(dFyfddeltaf(i)*cos(deltaf(i)) - Fyf(i)*sin(deltaf(i))); ...
+                0, Nw/m, 0, 0, 0, 0]';
 
 f = @(i) [u(i)*cos(psi(i))-v(i)*sin(psi(i));
      1/m*(-fcon*m*g+Nw*Fx(i)-Fyf(i)*sin(deltaf(i)))+v(i)*r(i);
