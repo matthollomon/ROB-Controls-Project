@@ -219,12 +219,13 @@ eY = zeros(nstates,length(T));
 
 aQ = 1;
 bQ = 1;
+testLength = 1000; %: length(T)-2
 
-for i = 1 : length(T)-1
+for i = 1 : testLength
     %shorten prediction horizon if we are at the end of trajectory
     %lengthen prediction horizon if going fast
     %shorten if going slow
-    npred_i=min([npred,length(T) - i]);
+    npred_i=min([npred,length(T) - 1 - i]);
     
     %calculate error
     eY(:,i) = Y(:,i) - Y_ref(:,i);
@@ -241,15 +242,15 @@ for i = 1 : length(T)-1
     
     %d^2 cost 2a
     %Q should be 6 columns     
-    Q = [];
-    for j = i : npred_i + i
-        
-        Q = [Q ,2*a*eY(1,j),0,2*bQ*eY(1,j),0,0,0];
-    
-    end
+%     Q = [];
+%     for j = i : npred_i + i
+%         
+%         Q = [Q ,2*a*eY(1,j),0,2*bQ*eY(1,j),0,0,0];
+%     
+%     end
     
     %cost for inputs OPTIMIZE
-    R = [0,0];
+    R = [0.1,1];
     
     %fsize = zeros(nstates*(npred_i+1)+ninputs*npred_i,1);
     fdisc = [];
@@ -275,7 +276,16 @@ for i = 1 : length(T)-1
 %         
 %     end
     
-    H = diag([Q,repmat(R,[1,npred_i])]);
+%     H = diag([Q,repmat(R,[1,npred_i])]);
+
+%cost for states
+    
+    Q=[1,0.1,1,0.1,0.5,0.1];
+    
+    %cost for inputs CHANGE STEERING TO 0.1?
+    R=[0.1,0.1];
+    
+    H=diag([repmat(Q,[1,npred_i+1]),repmat(R,[1,npred_i])]);
     
     [x,fval] = quadprog(H,fdisc,[],[],Aeq,beq,Lb,Ub);
     
@@ -309,23 +319,26 @@ plot(bl(1,:),bl(2,:),'k')
 hold on
 plot(br(1,:),br(2,:),'k')
 plot(cline(1,:),cline(2,:),'--k')
-plot(Y(1,:),Y(1,:),'r')
+plot(Y(1,1:testLength),Y(3,1:testLength),'r')
+hold off
 
 figure(2)
-plot(T(1:(length(T)-1)),U_ref(2,:),'r')
+plot(T(1:1:testLength),U_ref(2,1:testLength),'r')
 hold on
-plot(T,u_mpc(2,:),'b')
-plot(T,U(2,:),'k')
+plot(T(1:1:testLength),u_mpc(2,1:testLength),'b')
+plot(T(1:1:testLength),U(2,1:testLength),'k')
 title('Steering Inputs')
 legend('Reference','MPC','Output')
+hold off
 
 figure(3)
-plot(T(1:(length(T)-1)),U_ref(1,:),'r')
+plot(T(1:1:testLength),U_ref(1,1:testLength),'r')
 hold on
-plot(T,u_mpc(1,:),'b')
-plot(T,U(1,:),'k')
+plot(T(1:1:testLength),u_mpc(1,1:testLength),'b')
+plot(T(1:1:testLength),U(1,1:testLength),'k--')
 title('Acceleration Inputs')
 legend('Reference','MPC','Output')
+hold off
 
 
 %% Functions
@@ -352,9 +365,9 @@ su = 2;
 u = @(i) Xbar_k(2,i);
 r = @(i) Xbar_k(6,i);
 v = @(i) Xbar_k(4,i);
-deltaf = @(i) Ubar_k(1,i);
-Fx = @(i) Ubar_k(2,i);
 psi = @(i) Xbar_k(5,i);
+deltaf = @(i) Ubar_k(2,i);
+Fx = @(i) Ubar_k(1,i);
 
 dafddeltaf = 180.0/pi;
 dafdv = @(i) rad2deg(-1/(u(i)*((v(i) + a*r(i))^2/u(i)^2 + 1)));
