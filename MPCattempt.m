@@ -10,7 +10,7 @@ thetaCline = TestTrack.TestTrack.theta;
 
 %% Define reference states, inputs
 
-U = [repmat([-0.04, 2400],100,1);
+Umanual = [repmat([-0.04, 2400],100,1);
     repmat([0, 2400],200,1);
     repmat([0.0, 2400],30,1);
     repmat([0.0, 2400],100,1);
@@ -145,15 +145,15 @@ U = [repmat([-0.04, 2400],100,1);
     repmat([0 , 5000],860,1)]; 
 
 dt = 0.01;
-time = size(U,1) * dt;
+time = size(Umanual,1) * dt;
 T = 0 : dt : time;
     
 x0 = [287 , 5 , -176 , 0 , 2 , 0];
-[Y,timeIntegrate] = forwardIntegrateControlInput(U,x0);
+[Ymanual,timeIntegrate] = forwardIntegrateControlInput(Umanual,x0);
 
-Y_ref = Y';
+Y_ref = Ymanual';
 
-U_ref = [U(:,2)'; U(:,1)'];
+U_ref = [Umanual(:,2)'; Umanual(:,1)'];
 
 %% Parameters
 
@@ -205,22 +205,22 @@ Ndec=(npred+1)*nstates+ninputs*npred;
 y0 = [287,5,-176,0,2,0]';
 
 %final trajectory
-Y = NaN(nstates,length(T));
+Y = NaN(nstates,length(T)-1);
 Y(:,1) = y0;
 
 %applied inputs
-U = NaN(ninputs,length(T));
+U = NaN(ninputs,length(T)-1);
 U(:,1) = U_ref(:,1);
 
 %input from QP
-u_mpc = NaN(ninputs,length(T));
+u_mpc = NaN(ninputs,length(T)-1);
 
 %error in states (actual-reference)
-eY = zeros(nstates,length(T));
+eY = NaN(nstates,length(T)-1);
 
 aQ = 1;
 bQ = 1;
-testLength = 1000; %: length(T)-2
+testLength = length(T) - 2; 
 
 for i = 1 : testLength
     %shorten prediction horizon if we are at the end of trajectory
@@ -251,7 +251,7 @@ for i = 1 : testLength
 %     end
     
     %cost for inputs OPTIMIZE
-    R = [0.1,1];
+    R = [1,1];
     
     %fsize = zeros(nstates*(npred_i+1)+ninputs*npred_i,1);
     fdisc = [];
@@ -281,7 +281,7 @@ for i = 1 : testLength
 
 %cost for states
     
-    Q=[1,0.1,1,0.1,0.5,0.1];
+    Q=[2,1,2,1,1,0.1];
     
     %cost for inputs CHANGE STEERING TO 0.1?
     R=[0.5,2];
@@ -310,30 +310,37 @@ for i = 1 : testLength
 end
 
 %% Plotting
+
+Ucheck = [U(2,:)', U(1,:)'];
+[Ycheck,T] = forwardIntegrateControlInput(Ucheck);
+
 figure(1)
-plot(bl(1,:),bl(2,:),'k')
+%plot(Y(1,1:testLength),Y(3,1:testLength),'r')
+plot(Ycheck(:,1),Ycheck(:,3),'r')
 hold on
+plot(Ymanual(:,1),Ymanual(:,3),'b')
+plot(bl(1,:),bl(2,:),'k')
 plot(br(1,:),br(2,:),'k')
-plot(cline(1,:),cline(2,:),'--k')
-plot(Y(1,1:testLength),Y(3,1:testLength),'r')
+%plot(cline(1,:),cline(2,:),'--k')
+legend('MPC trajectory','Manual Trajectory')
 hold off
 
 figure(2)
-plot(T(1:1:testLength),U_ref(2,1:testLength),'r')
+plot(T(1:1:testLength),U(2,1:testLength),'r')
 hold on
-plot(T(1:1:testLength),u_mpc(2,1:testLength),'b')
-plot(T(1:1:testLength),U(2,1:testLength),'k')
+plot(T(1:1:testLength),U_ref(2,1:testLength),'b--')
+%plot(T(1:1:testLength),u_mpc(2,1:testLength),'k.-')
 title('Steering Inputs')
-legend('Reference','MPC','Output')
+legend('Reference','MPC')
 hold off
 
 figure(3)
-plot(T(1:1:testLength),U_ref(1,1:testLength),'r')
+plot(T(1:1:testLength),U(1,1:testLength),'r')
 hold on
-plot(T(1:1:testLength),u_mpc(1,1:testLength),'b')
-plot(T(1:1:testLength),U(1,1:testLength),'k--')
+plot(T(1:1:testLength),U_ref(1,1:testLength),'b--')
+%plot(T(1:1:testLength),u_mpc(1,1:testLength),'k.-')
 title('Acceleration Inputs')
-legend('Reference','MPC','Output')
+legend('Reference','MPC')
 hold off
 
 
