@@ -1,4 +1,4 @@
-%% MPC Attempt
+%% Reverted MPC Attempt
 
 %% Load track data
 
@@ -10,146 +10,114 @@ thetaCline = TestTrack.TestTrack.theta;
 
 %% Define reference states, inputs
 
-Umanual = [repmat([-0.04, 2400],100,1);
-    repmat([0, 2400],200,1);
-    repmat([0.0, 2400],30,1);
-    repmat([0.0, 2400],100,1);
-    repmat([0.0, 2400],180,1);
-    repmat([-0.0, 1800],130,1);
-    repmat([-0.03,0],350,1);
-    repmat([+0.05, 0],100,1);
-    repmat([0.025, 0],100,1);
-    repmat([0, 0],100,1);
-    repmat([0, 0],100,1);
-    repmat([0, 0],100,1);
-    repmat([0, 0],100,1);
-    repmat([0, 0],100,1);
-    repmat([0, 0],100,1);
-    repmat([0, 0],100,1);
-    repmat([0.03, 0],100,1);
-    repmat([0.03, 0],100,1);
-    repmat([0.01, 0],100,1);
-    repmat([0, 0],100,1);
-    repmat([-0.02, 0],100,1);
-    repmat([-0.03, 0],50,1);
-    repmat([-0.04, 0],50,1);
-    repmat([-0.05, 0],50,1);
-    repmat([-0.04, 0],50,1);
-    repmat([0.02, 0],50,1);
-    repmat([0.02, 0],50,1);
-    repmat([0.02, 0],50,1);
-    repmat([0.03, 0],50,1);
-    repmat([0.04, 0],50,1);
-    repmat([0.05, 0],50,1);
-    repmat([0.04, 0],50,1);
-    repmat([0.03, 0],50,1);
-    repmat([0.03, 0],50,1);
-    repmat([0.02, 0],50,1);
-    repmat([0, 0],50,1);
-    repmat([0, 0],50,1);
-    repmat([-0.01, 0],50,1);
+Umanual = [repmat([-0.05, 100],50,1);
+    repmat([-0.1, 200],50,1);
+    repmat([-0.1, 300],50,1);
+    repmat([-0.05, 400],50,1);
+    repmat([-0.0, 500],50,1);
+    repmat([0.05, 600],50,1);
+    repmat([0.05, 700],50,1);
+    repmat([0.05, 800],50,1);
+    repmat([-0.0, 900],50,1);
+    repmat([0, 1000],50,1);
+    repmat([0, 900],50,1);
+    repmat([0, 800],50,1);
+    repmat([0, 700],50,1);
+    repmat([0, 600],50,1);
+    repmat([0, 500],50,1);
+    repmat([0, 400],50,1);
+    repmat([0, 300],50,1);
+    repmat([0, 200],50,1);
+    repmat([0, 100],50,1);
+    repmat([0, 0],600,1);
     repmat([-0.02, 0],50,1);
     repmat([-0.03, 0],50,1);
     repmat([-0.04, 0],50,1);
     repmat([-0.05, 0],50,1);
-    repmat([-0.04, 0],50,1);
+    repmat([-0.03, 0],50,1);
+    repmat([-0.03, 0],50,1);
     repmat([-0.03, 0],50,1);
     repmat([-0.02, 0],50,1);
-    repmat([0.0, 0],50,1);
+    repmat([-0.02, 0],50,1);
+    repmat([-0.02, 0],50,1);
+    repmat([-0.02, 0],50,1);
+    repmat([-0.02, 0],50,1);
+    repmat([-0.02, 0],50,1);
+    repmat([-0.02, 0],50,1);
+    repmat([-0.02, 0],50,1);
+    repmat([-0.02, 0],50,1);
+    repmat([-0.03, 0],50,1);
+    repmat([-0.03, 0],50,1);
+    repmat([-0.03, 0],50,1);
+    repmat([-0.03, 0],50,1);
+    repmat([-0.03, 0],50,1);
+    repmat([-0.03, 0],50,1);
+    repmat([-0.03, 0],50,1);
+    repmat([-0.02, 0],50,1);
+    repmat([-0.02, 0],50,1);
+    repmat([-0.02, 0],50,1);
+    repmat([-0.02, 0],50,1);
+    repmat([-0.02, 0],50,1);
+    repmat([-0.02, 0],50,1);
+    repmat([-0.02, 0],50,1);
     repmat([-0.01, 0],50,1);
-    repmat([-0.02, 0],50,1);
-    repmat([-0.03, 0],50,1);
-    repmat([-0.02, 0],50,1);
-    repmat([-0.02, 0],50,1);
-    repmat([-0.03, 0],50,1);
-    repmat([-0.04, 0],50,1);
-    repmat([-0.03, 0],50,1);
-    repmat([-0.03, 0],50,1);
-    repmat([-0.03, 0],50,1);
-    repmat([-0.03, 0],50,1);
-    repmat([-0.02, 0],50,1);
     repmat([-0.01, 0],50,1);
+    repmat([-0.01, 0],50,1);
+    repmat([0, 0],50,1);
+    repmat([0, 0],50,1);
+    repmat([0, 0],50,1);
+    repmat([0, 0],50,1);
+    repmat([0, 0],50,1);
+    repmat([0, 0],50,1);
+    repmat([0, 0],50,1);
+    repmat([0, 0],50,1);
+    repmat([0, 0],50,1);
+    repmat([0.01, 0],50,1);
+    repmat([0.01, 0],50,1);
+    repmat([0, 0],1100,1);
+    repmat([0.01, 0],50,1);
+    repmat([0.02, 0],50,1);
+    repmat([0.03, 0],50,1);
+    repmat([0.02, 0],50,1);
+    repmat([0.01, 0],50,1);
+    repmat([0.01, 0],50,1);
+    repmat([0.02, 0],50,1);
+    repmat([0.02, 0],50,1);
+    repmat([0.02, 0],50,1);
+    repmat([0.02, 0],50,1);
+    repmat([0.03, 0],50,1);
+    repmat([0.03, 0],50,1);
+    repmat([0.03, 0],50,1);
+    repmat([0.03, 0],50,1);
+    repmat([0.04, 0],50,1);
+    repmat([0.04, 0],50,1);
+    repmat([0.04, 0],50,1);
+    repmat([0.04, 0],50,1);
+    repmat([0.04, 0],50,1);
+    repmat([0.03, 0],50,1);
+    repmat([0.03, 0],50,1);
+    repmat([0.02, 0],50,1);
+    repmat([0.01, 0],50,1);
+    repmat([0.00, 0],50,1);
     repmat([-0.01, 0],50,1);
     repmat([0.00, 0],50,1);
-    repmat([0.01, 0],50,1);
-    repmat([0.01, 0],50,1);
-    repmat([0.0, 0],50,1);
-    repmat([0.0, 0],50,1);
-    repmat([0.01, 0],50,1);
-    repmat([0.02, 0],50,1);
-    repmat([0.02, 0],50,1);
-    repmat([0.03, 0],50,1);
-    repmat([0.05, 0],50,1);
-    repmat([0.06, 0],50,1);
-    repmat([0.06, 0],50,1);
-    repmat([0.05, 0],50,1);
-    repmat([0.04, 0],50,1);
-    repmat([0.02, 0],50,1);
-    repmat([0.02, 0],50,1);
-    repmat([0.01, 0],50,1);
-    repmat([0.01, 0],50,1);
-    repmat([0 , 0],50,1);
-    repmat([0 , 0],50,1);
-    repmat([0 , 0],50,1);
-    repmat([0 , 0],50,1);
-    repmat([0 , 0],50,1);
-    repmat([0 , 0],50,1);
-    repmat([0 , 0],50,1);
-    repmat([-0.02, 0],50,1);
-    repmat([-0.04 , 0],50,1);
-    repmat([-0.06 , 0],50,1);
-    repmat([-0.04 , 0],50,1);
-    repmat([-0.6 , 0],50,1);
-    repmat([-0.06 , 0],50,1);
-    repmat([-0.04 , 0],50,1);
-    repmat([-0.04 , 0],50,1);
-    repmat([-0.04 , 0],50,1);
-    repmat([-0.04 , 0],50,1);
-    repmat([-0.04 , 0],50,1);
-    repmat([-0.05 , 0],50,1);
-    repmat([-0.05 , 0],50,1);
-    repmat([-0.03 , 0],50,1);
-    repmat([-0.01 , 0],50,1);
-    repmat([0.01 , 0],50,1);
-    repmat([0.03 , 0],50,1);
-    repmat([0.05 , 0],50,1);
-    repmat([0.07 , 0],50,1);
-    repmat([0.09 , 0],50,1);
-    repmat([0.07 , 0],50,1);
-    repmat([0.05 , 0],50,1);
-    repmat([0.03 , 0],50,1);
-    repmat([0.01 , 0],50,1);
-    repmat([0.01 , 0],50,1);
-    repmat([0.01 , 0],50,1);
-    repmat([0.01 , 0],50,1);
-    repmat([0.01 , 0],50,1);
-    repmat([0.01 , 0],50,1);
-    repmat([0.0 , 0],50,1);
-    repmat([0.0 , 0],50,1);
-    repmat([0 , 0],50,1);
-    repmat([0.0 , 0],50,1);
-    repmat([0.0 , 0],100,1);
-    repmat([0.0 , 0],100,1);
-    repmat([0.0 , 0],100,1);
-    repmat([0.0 , 0],100,1);
-    repmat([0.0 , 0],100,1);
-    repmat([0.0 , 0],100,1);
-    repmat([0.01 , 0],100,1);
-    repmat([0.01 , 0],100,1);
-    repmat([0.02 , 0],100,1);
-    repmat([0.03 , 0],100,1);
-    repmat([0.03 , 0],100,1);
-    repmat([0.03 , 0],100,1);
-    repmat([0.02 , 0],100,1);
-    repmat([0.01 , 0],200,1);
-    repmat([0 , 5000],860,1)]; 
+    repmat([0.00, 0],50,1);
+    repmat([0.00, 0],50,1);
+    repmat([0.00, 0],50,1);
+    repmat([-.01, 0],50,1);
+    repmat([-.01, 0],50,1);
+    repmat([-.01, 0],50,1);
+       
+    
+    
+    ];
 
 dt = 0.01;
 time = size(Umanual,1) * dt;
 T = 0 : dt : time;
     
 x0 = [287 , 5 , -176 , 0 , 2 , 0];
-[Ymanual,timeIntegrate] = forwardIntegrateControlInput(Umanual,x0);
+[Ymanual,Tmanual] = forwardIntegrateControlInput(Umanual,x0);
 
 Y_ref = Ymanual';
 
@@ -237,54 +205,34 @@ for i = 1 : testLength
     %generate boundary constraints
     [Lb,Ub] = bound_cons(i,U_ref,npred_i,input_range,nstates,ninputs);
     
-    %cost for states OPTIMIZE
     %cost = Sum from i to npred+1 (a(ey(1,i))^2 + b(ey(3,i))^2 + 0(nothing
     %for inputs)
+       
+    fdisc = zeros(nstates*(npred_i+1)+ninputs*npred_i,1);
     
-    %d^2 cost 2a
-    %Q should be 6 columns     
-%     Q = [];
-%     for j = i : npred_i + i
-%         
-%         Q = [Q ,2*a*eY(1,j),0,2*bQ*eY(1,j),0,0,0];
+%     fdisc = [];
+%     for k = i : npred_i + i
+%       fdisc = [fdisc;
+%                f(k)];     
+%     end
 %     
+%     %What should f for inputs be?
+%     for k = i : npred_i + i - 1
+%     fdisc = [fdisc;            
+%              0;
+%              0];
 %     end
     
-    %cost for inputs OPTIMIZE
-    R = [1,1];
-    
-    %fsize = zeros(nstates*(npred_i+1)+ninputs*npred_i,1);
-    fdisc = [];
-    for k = i : npred_i + i
-    
-        fdisc = [fdisc;
-                 f(k)];
-    
-    end
-    
-    for k = i : npred_i + i - 1
-    
-        fdisc = [fdisc;
-                 0;
-                 0];
-    
-    end
-    
-    %H = df^2/d^2z
-    
-%     for j = i : npred+1
-%         
-%         
-%     end
+%    %H = df^2/d^2z
     
 %     H = diag([Q,repmat(R,[1,npred_i])]);
 
-%cost for states
+    %cost for states OPTIMIZE
     
-    Q=[2,1,2,1,1,0.1];
+    Q=[1,0.01,1,0.01,1,0.01];
     
-    %cost for inputs CHANGE STEERING TO 0.1?
-    R=[0.5,2];
+    %cost for inputs OPTIMIZE
+    R=[10,10];
     
     H=diag([repmat(Q,[1,npred_i+1]),repmat(R,[1,npred_i])]);
     
@@ -292,16 +240,12 @@ for i = 1 : testLength
     
     
     %get linearized input
-%     nstates*(npred_i+1)+1
-%     nstates*(npred_i+1)+ninputs
-%     x(nstates*(npred_i+1)+1:nstates*(npred_i+1)+ninputs)
     u_mpc(:,i) = x(nstates*(npred_i+1)+1:nstates*(npred_i+1)+ninputs);
     
-%     get input
+    %get input
     U(:,i) = u_mpc(:,i) + U_ref(:,i);
     
     %simulate model
-    
     [~,ztemp]=ode45(@(t,x)bike(t,x,0,U(:,i)),[0 dt], Y(:,i));
     
     %store final state
@@ -315,7 +259,7 @@ Ucheck = [U(2,:)', U(1,:)'];
 [Ycheck,T] = forwardIntegrateControlInput(Ucheck);
 
 figure(1)
-%plot(Y(1,1:testLength),Y(3,1:testLength),'r')
+%plot(Y(1,1:testLength),Y(3,1:testLength),'c')
 plot(Ycheck(:,1),Ycheck(:,3),'r')
 hold on
 plot(Ymanual(:,1),Ymanual(:,3),'b')
@@ -323,24 +267,86 @@ plot(bl(1,:),bl(2,:),'k')
 plot(br(1,:),br(2,:),'k')
 %plot(cline(1,:),cline(2,:),'--k')
 legend('MPC trajectory','Manual Trajectory')
+xlim([200 400])
+ylim([-200 200])
 hold off
 
 figure(2)
+subplot(2,1,1)
+title('Inputs')
 plot(T(1:1:testLength),U(2,1:testLength),'r')
 hold on
 plot(T(1:1:testLength),U_ref(2,1:testLength),'b--')
 %plot(T(1:1:testLength),u_mpc(2,1:testLength),'k.-')
-title('Steering Inputs')
-legend('Reference','MPC')
+ylabel('Steering Angle [rad]')
+legend('MPC','Reference')
+ylim([-0.5 0.5])
 hold off
 
-figure(3)
+subplot(2,1,2)
 plot(T(1:1:testLength),U(1,1:testLength),'r')
 hold on
 plot(T(1:1:testLength),U_ref(1,1:testLength),'b--')
 %plot(T(1:1:testLength),u_mpc(1,1:testLength),'k.-')
-title('Acceleration Inputs')
-legend('Reference','MPC')
+ylabel('Acceleration [m/s^2]')
+legend('MPC','Reference')
+ylim([-5000 5000])
+hold off
+
+figure(3)
+title('States')
+subplot(2,3,1)
+plot(T(1:1:testLength),Ycheck(1:testLength,1),'r')
+hold on
+plot(Tmanual(1:1:testLength),Ymanual(1:testLength,1),'b--')
+%plot(T(1:1:testLength),u_mpc(2,1:testLength),'k.-')
+title('x')
+legend('MPC','Reference')
+hold off
+
+subplot(2,3,2)
+plot(T(1:1:testLength),Ycheck(1:testLength,2),'r')
+hold on
+plot(Tmanual(1:1:testLength),Ymanual(1:testLength,2),'b--')
+%plot(T(1:1:testLength),u_mpc(2,1:testLength),'k.-')
+title('u')
+legend('MPC','Reference')
+hold off
+
+subplot(2,3,3)
+plot(T(1:1:testLength),Ycheck(1:testLength,3),'r')
+hold on
+plot(Tmanual(1:1:testLength),Ymanual(1:testLength,3),'b--')
+%plot(T(1:1:testLength),u_mpc(2,1:testLength),'k.-')
+title('y')
+legend('MPC','Reference')
+hold off
+
+subplot(2,3,4)
+plot(T(1:1:testLength),Ycheck(1:testLength,4),'r')
+hold on
+plot(Tmanual(1:1:testLength),Ymanual(1:testLength,4),'b--')
+%plot(T(1:1:testLength),u_mpc(2,1:testLength),'k.-')
+title('v')
+legend('MPC','Reference')
+hold off
+
+subplot(2,3,5)
+plot(T(1:1:testLength),Ycheck(1:testLength,5),'r')
+hold on
+plot(Tmanual(1:1:testLength),Ymanual(1:testLength,5),'b--')
+%plot(T(1:1:testLength),u_mpc(2,1:testLength),'k.-')
+title('psi')
+legend('MPC','Reference')
+hold off
+
+subplot(2,3,6)
+plot(T(1:1:testLength),Ycheck(1:testLength,6),'r')
+hold on
+plot(Tmanual(1:1:testLength),Ymanual(1:testLength,6),'b--')
+%plot(T(1:1:testLength),u_mpc(2,1:testLength),'k.-')
+title('r')
+legend('MPC','Reference')
 hold off
 
 
@@ -561,4 +567,3 @@ dzdt= [x(2)*cos(x(5))-x(4)*sin(x(5));...
           x(6);...
           (F_yf*a*cos(delta_f)-F_yr*b)/Iz];
 end
-
