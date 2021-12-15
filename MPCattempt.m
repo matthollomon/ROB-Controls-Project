@@ -107,7 +107,96 @@ Umanual = [repmat([-0.05, 100],50,1);
     repmat([-.01, 0],50,1);
     repmat([-.01, 0],50,1);
     repmat([-.01, 0],50,1);
-       
+    repmat([-.01, 0],50,1);
+    repmat([-.01, 0],50,1);
+    repmat([-.02, 0],50,1);
+    repmat([-.03, 0],50,1);
+    repmat([-.04, 0],50,1);
+    repmat([-.05, 0],50,1);
+    repmat([-.05, 0],50,1);
+    repmat([-.04, 0],50,1);
+    repmat([-.04, 0],50,1);
+    repmat([-.04, 0],50,1);
+    repmat([-.04, 0],50,1);
+    repmat([-.04, 0],50,1);
+    repmat([-.04, 0],50,1);
+    repmat([-.04, 0],50,1);
+    repmat([-.04, 0],50,1);
+    repmat([-.04, 0],50,1);
+    repmat([-.04, 0],50,1);
+    repmat([-.04, 0],50,1);
+    repmat([-.05, 0],50,1);
+    repmat([-.05, 0],50,1);
+    repmat([-.04, 0],50,1);
+    repmat([-.04, 0],50,1);
+    repmat([-.04, 0],50,1);
+    repmat([-.04, 0],50,1);
+    repmat([-.04, 0],50,1);
+    repmat([-.03, 0],50,1);
+    repmat([-.02, 0],50,1);
+    repmat([-.01, 0],50,1);
+    repmat([0, 0],50,1);
+    repmat([0, 0],50,1);
+    repmat([0.01, 0],50,1);
+    repmat([0.01, 0],50,1);
+    repmat([0.02, 0],50,1);
+    repmat([0.02, 0],50,1);
+    repmat([0.03, 0],50,1);
+    repmat([0.03, 0],50,1);
+    repmat([0.04, 0],50,1);
+    repmat([0.04, 0],50,1);
+    repmat([0.04, 0],50,1);
+    repmat([0.04, 0],50,1);
+    repmat([0.04, 0],50,1);
+    repmat([0.04, 0],50,1);
+    repmat([0.03, 0],50,1);
+    repmat([0.03, 0],50,1);
+    repmat([0.02, 0],50,1);
+    repmat([0.02, 0],50,1);
+    repmat([0.02, 0],50,1);
+    repmat([0.02, 0],50,1);
+    repmat([0.02, 0],50,1);
+    repmat([0.02, 0],50,1);
+    repmat([0.02, 0],50,1);
+    repmat([0.02, 0],50,1);
+    repmat([0.02, 0],50,1);
+    repmat([0.03, 0],50,1);
+    repmat([0.03, 0],50,1);
+    repmat([0.03, 0],50,1);
+    repmat([0.04, 0],50,1);
+    repmat([0.04, 0],50,1);
+    repmat([0.05, 0],50,1);
+    repmat([0.05, 0],50,1);
+    repmat([0.06, 0],50,1);
+    repmat([0.06, 0],50,1);
+    repmat([0.07, 0],50,1);
+    repmat([0.07, 0],50,1);
+    repmat([0.07, 0],50,1);
+    repmat([0.07, 0],50,1);
+    repmat([0.07, 0],50,1);
+    repmat([0.06, 0],50,1);
+    repmat([0.06, 0],50,1);
+    repmat([0.05, 0],50,1);
+    repmat([0.05, 0],50,1);
+    repmat([0.04, 0],50,1);
+    repmat([0.04, 0],50,1);
+    repmat([0.04, 0],50,1);
+    repmat([0.04, 0],50,1);
+    repmat([0.04, 0],50,1);
+    repmat([0.04, 0],50,1);
+    repmat([0.04, 0],50,1);
+    repmat([0.04, 0],50,1);
+    repmat([0.04, 0],50,1);
+    repmat([0.04, 0],50,1);
+    repmat([0.04, 0],50,1);
+    repmat([0.04, 0],50,1);
+    repmat([0.05, 0],50,1);
+    repmat([0.05, 0],50,1);
+    repmat([0.05, 0],50,1);
+    repmat([0.05, 0],50,1);
+    repmat([0.05, 0],50,1);
+    repmat([0.05, 0],50,1);
+    
     
     
     ];
@@ -304,7 +393,7 @@ title('x')
 legend('MPC','Reference')
 hold off
 
-subplot(2,3,2)
+subplot(2,3,4)
 plot(T(1:1:testLength),Ycheck(1:testLength,2),'r')
 hold on
 plot(Tmanual(1:1:testLength),Ymanual(1:testLength,2),'b--')
@@ -313,7 +402,7 @@ title('u')
 legend('MPC','Reference')
 hold off
 
-subplot(2,3,3)
+subplot(2,3,2)
 plot(T(1:1:testLength),Ycheck(1:testLength,3),'r')
 hold on
 plot(Tmanual(1:1:testLength),Ymanual(1:testLength,3),'b--')
@@ -322,7 +411,7 @@ title('y')
 legend('MPC','Reference')
 hold off
 
-subplot(2,3,4)
+subplot(2,3,5)
 plot(T(1:1:testLength),Ycheck(1:testLength,4),'r')
 hold on
 plot(Tmanual(1:1:testLength),Ymanual(1:testLength,4),'b--')
@@ -331,7 +420,7 @@ title('v')
 legend('MPC','Reference')
 hold off
 
-subplot(2,3,5)
+subplot(2,3,3)
 plot(T(1:1:testLength),Ycheck(1:testLength,5),'r')
 hold on
 plot(Tmanual(1:1:testLength),Ymanual(1:testLength,5),'b--')
