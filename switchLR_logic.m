@@ -3,7 +3,7 @@ Xobs = generateRandomObstacles(10);
 Xobs_seen = senseObstacles(curr_pos,Xobs);    % the final sim works like this
 Xobs_seen = Xobs;           % only for test
 
-% call these once before forloop controller
+%% call these once before forloop controller
 dist_along_cline = cumsum([0, sqrt(diff(cline(1,:)).^2 + diff(cline(2,:)).^2)]);
 Xobs_seen = cell2mat(Xobs_seen');       % final sim takes Xobs_seen as input every .5s
 idx_obs = 1;
@@ -11,7 +11,7 @@ buffer_after_obs = 1;
 % if we travel this distance passing the current obstacle, switch to the next obstacle
 
 
-% call these every time inside forloop controller ===================
+%% call these every time inside forloop controller
 
 curr_pos = ???;
 dist_curr = distAlongCline(curr_pos);
@@ -25,17 +25,20 @@ if dist_curr > dist_obs + buffer_after_obs)
 
 end
 
-if dxxxxxx
-    lane = 0
+dist_to_left = norm(bl(:,k1),midpt_Xobs);
+dist_to_right = norm(br(:,k1),midpt_Xobs);
+
+if dist_to_left > dist_to_right
+    keep_left = true;
 else
-    lane = 1
+    keep_left = false;
 end
 
 
-% ====================================================================
 
-% put this function at the end
-function dist = distAlongCline(pos, cline, dist_along_cline)
+
+%% put this function at the end
+function [k1 dist] = distAlongCline(pos, cline, dist_along_cline)
 k1 = dsearchn(cline',pos);     % nearest
 k2 = dsearchn(cline(:,(k1-1):2:(k1+1))',pos);   % 2nd nearest
 
