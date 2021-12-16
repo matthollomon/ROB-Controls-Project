@@ -14,11 +14,11 @@ buffer_after_obs = 1;
 %% call these every time inside forloop controller
 
 curr_pos = ???;
-dist_curr = distAlongCline(curr_pos);
+[~, dist_curr] = distAlongCline(curr_pos);
 
 curr_Xobs = Xobs_seen{idx_obs};     % 4 by 2 coordinates
 midpt_Xobs = [mean([curr_Xobs(1,1) curr_Xobs(3,1)]) mean([curr_Xobs(1,2) curr_Xobs(3,2)])];
-dist_obs = distAlongCline(midpt_Xobs);
+[k1, dist_obs] = distAlongCline(midpt_Xobs);
 
 if dist_curr > dist_obs + buffer_after_obs)
     idx_obs = idx_obs + 1;      % +1 after passing an obstacle
