@@ -25,8 +25,8 @@ if dist_curr > dist_obs + buffer_after_obs)
 
 end
 
-dist_to_left = norm(bl(:,k1),midpt_Xobs);
-dist_to_right = norm(br(:,k1),midpt_Xobs);
+dist_to_left = norm(bl(:,k1)-midpt_Xobs);
+dist_to_right = norm(br(:,k1)-midpt_Xobs);
 
 if dist_to_left > dist_to_right
     keep_left = true;
